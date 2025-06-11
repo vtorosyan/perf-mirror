@@ -1,23 +1,12 @@
-# fly.toml app configuration file generated for perf-mirror-rough-water-776 on 2025-06-11T22:49:30+02:00
+# fly.toml app configuration file generated for perf-mirror on 2025-06-11T21:42:58Z
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
 
-app = 'perf-mirror-rough-water-776'
-primary_region = 'sjc'
+app = 'perf-mirror'
+primary_region = 'fra'
 
 [build]
-
-[deploy]
-  release_command = 'npx prisma migrate deploy'
-
-[env]
-  DATABASE_URL = 'file:/data/perf-mirror.db'
-  NODE_ENV = 'production'
-
-[[mounts]]
-  source = 'perf_mirror_data'
-  destination = '/data'
 
 [http_service]
   internal_port = 3000
@@ -26,13 +15,6 @@ primary_region = 'sjc'
   auto_start_machines = true
   min_machines_running = 0
   processes = ['app']
-
-  [[http_service.checks]]
-    interval = '30s'
-    timeout = '5s'
-    grace_period = '10s'
-    method = 'GET'
-    path = '/api/health'
 
 [[vm]]
   cpu_kind = 'shared'
