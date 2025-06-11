@@ -156,10 +156,26 @@ Your performance tracking data is automatically persisted:
 
 ### Troubleshooting
 
+**Common Issues:**
+
 - **Docker Check**: Run `./scripts/check-docker.sh` to verify your Docker setup
 - **View Logs**: Use `docker-compose logs -f` to see application logs  
 - **Reset Database**: Stop the container and remove the volume: `docker-compose down && docker volume rm perf-mirror_perf_mirror_data`
 - **Check Status**: Run `make status` to see current application state
+
+**Docker-Specific Troubleshooting:**
+
+- **Prisma Engine Issues**: If you see OpenSSL compatibility errors, the Dockerfile has been updated to include OpenSSL libraries for Alpine Linux. Rebuild the image with `make docker-build`
+- **Binary Target Errors**: The Prisma schema includes binary targets for Alpine Linux (`linux-musl-openssl-3.0.x`). This fixes "engine not compatible" errors
+- **Container Unhealthy**: If the container shows as unhealthy, check logs with `docker-compose logs` for Prisma client generation issues
+- **Database Initialization**: The container automatically sets up the database on first run. If this fails, remove the volume and restart: `docker volume rm perf-mirror_perf_mirror_data && make docker-deploy`
+- **Port Conflicts**: If port 3000 is busy, modify the `docker-compose.yml` ports mapping (e.g., `"3001:3000"`)
+
+**Development Mode Issues:**
+
+- **CSS Compilation Errors**: If you see `border-border` class errors, clear the build cache: `rm -rf .next && npm run dev`
+- **Prisma Client Errors**: Regenerate the client: `npx prisma generate && npm run dev`
+- **Database Connection**: Ensure the database exists: `npx prisma db push`
 
 ## Getting Started Guide
 

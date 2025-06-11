@@ -1,5 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Use standalone output for Docker builds
+  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   eslint: {
     ignoreDuringBuilds: true,
   },

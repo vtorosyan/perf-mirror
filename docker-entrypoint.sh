@@ -37,10 +37,6 @@ check_database() {
 if ! check_database; then
     echo "🔧 Initializing database..."
     
-    # Generate Prisma client (in case it's missing)
-    echo "🔄 Generating Prisma client..."
-    npx prisma generate
-    
     # Push database schema (creates database and tables)
     echo "📊 Creating database schema..."
     npx prisma db push --accept-data-loss
