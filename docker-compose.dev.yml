@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  perf-mirror-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    volumes:
+      # Mount the source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      # Persist the SQLite database
+      - perf_mirror_dev_data:/app/prisma
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=file:./dev.db
+    restart: unless-stopped
+
+volumes:
+  perf_mirror_dev_data:
+    driver: local 

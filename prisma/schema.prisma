@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Category {
+  id             String      @id @default(cuid())
+  name           String      @unique
+  scorePerOccurrence Int
+  dimension      String      // input, output, outcome, impact
+  description    String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  weeklyLogs     WeeklyLog[]
+}
+
+model WeeklyLog {
+  id         String   @id @default(cuid())
+  categoryId String
+  week       String   // Format: "2024-W01"
+  count      Int
+  overrideScore Int?   // Optional override for calculated score
+  createdAt  DateTime @default(now())
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, week])
+}
+
+model PerformanceTarget {
+  id                    String   @id @default(cuid())
+  name                  String   @default("Default Target")
+  excellentThreshold    Int      @default(225)
+  goodThreshold         Int      @default(170)
+  needsImprovementThreshold Int  @default(120)
+  timePeriodWeeks       Int      @default(12)
+  isActive              Boolean  @default(true)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model RoleWeights {
+  id            String   @id @default(cuid())
+  name          String   @unique // "Manager", "Senior Manager", "Director", "Custom"
+  inputWeight   Float    @default(0.25)
+  outputWeight  Float    @default(0.35)
+  outcomeWeight Float    @default(0.25)
+  impactWeight  Float    @default(0.15)
+  isActive      Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+} 

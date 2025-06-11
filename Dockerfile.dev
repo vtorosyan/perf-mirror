@@ -1,0 +1,27 @@
+# Development Dockerfile for hot reload
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy prisma schema
+COPY prisma ./prisma
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
+# Create directory for SQLite database
+RUN mkdir -p /app/prisma
+
+EXPOSE 3000
+
+# Use the entrypoint script
+ENTRYPOINT ["./docker-entrypoint.sh"]
+CMD ["npm", "run", "dev"] 
