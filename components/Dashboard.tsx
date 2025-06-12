@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
-import { TrendingUp, TrendingDown, Target, AlertTriangle, Brain, Scale } from 'lucide-react'
+import { TrendingUp, TrendingDown, Target, AlertTriangle, Brain, Scale, Calendar } from 'lucide-react'
 import { 
   getCurrentWeekString, 
   getPreviousWeeks, 
@@ -137,6 +137,30 @@ export default function Dashboard() {
     }
   }
 
+  const getActiveTarget = (): PerformanceTarget | null => {
+    return targets.find(target => target.isActive) || null
+  }
+
+  // Get the evaluation period based on active target
+  const getEvaluationPeriod = (): { weeks: string[], description: string } => {
+    const activeTarget = getActiveTarget()
+    
+    if (activeTarget && activeTarget.timePeriodWeeks > 0) {
+      const weeks = getPreviousWeeks(activeTarget.timePeriodWeeks)
+      return {
+        weeks,
+        description: `Last ${activeTarget.timePeriodWeeks} weeks (${activeTarget.name})`
+      }
+    } else {
+      // Fallback to current week if no target is set
+      const currentWeek = getCurrentWeekString()
+      return {
+        weeks: [currentWeek],
+        description: 'Current week only (no active target)'
+      }
+    }
+  }
+
   const calculateWeeklyScores = (): WeeklyScore[] => {
     const weeks = getPreviousWeeks(12)
 
@@ -168,10 +192,6 @@ export default function Dashboard() {
     })
   }
 
-  const getActiveTarget = (): PerformanceTarget | null => {
-    return targets.find(target => target.isActive) || null
-  }
-
   const getPerformanceLevel = (score: number, target: PerformanceTarget): string => {
     if (score >= target.excellentThreshold) return 'Excellent'
     if (score >= target.goodThreshold) return 'Good'
@@ -189,59 +209,65 @@ export default function Dashboard() {
     }
   }
 
-  const getCurrentWeekScore = (): number => {
-    const currentWeek = getCurrentWeekString()
-    const currentWeekLogs = weeklyLogs.filter(log => log.week === currentWeek)
-    console.log(`📅 Current week (${currentWeek}) has ${currentWeekLogs.length} logs:`, currentWeekLogs)
+  // Calculate score for the evaluation period (based on active target)
+  const getEvaluationPeriodScore = (): number => {
+    const { weeks } = getEvaluationPeriod()
+    const periodLogs = weeklyLogs.filter(log => weeks.includes(log.week))
+    console.log(`📅 Evaluation period (${weeks.length} weeks) has ${periodLogs.length} logs:`, periodLogs)
     
     if (roleWeights) {
-      const dimensionScores = calculateDimensionScores(currentWeekLogs)
+      const dimensionScores = calculateDimensionScores(periodLogs)
       const score = Math.round(calculateWeightedScore(dimensionScores, roleWeights))
-      console.log(`⚖️ Current week weighted score: ${score}`)
+      console.log(`⚖️ Evaluation period weighted score: ${score}`)
       return score
     } else {
-      const score = currentWeekLogs.reduce((total, log) => {
+      const score = periodLogs.reduce((total, log) => {
         const safeCount = Number(safeValue(log.count)) || 0
         const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
         const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
         return total + (safeOverrideScore ?? (safeCount * safeScorePerOccurrence))
       }, 0)
-      console.log(`📊 Current week raw score: ${score}`)
+      console.log(`📊 Evaluation period raw score: ${score}`)
       return score
     }
   }
 
-  const getCurrentDimensionScores = (): DimensionScore => {
-    const currentWeek = getCurrentWeekString()
-    const currentWeekLogs = weeklyLogs.filter(log => log.week === currentWeek)
-    return calculateDimensionScores(currentWeekLogs)
+  // Calculate dimension scores for the evaluation period
+  const getEvaluationPeriodDimensionScores = (): DimensionScore => {
+    const { weeks } = getEvaluationPeriod()
+    const periodLogs = weeklyLogs.filter(log => weeks.includes(log.week))
+    return calculateDimensionScores(periodLogs)
   }
 
   const getInsight = (): string => {
     const target = getActiveTarget()
-    if (!target) return 'Set up performance targets to get insights'
+    const { description } = getEvaluationPeriod()
+    
+    if (!target) {
+      return `Set up performance targets to get insights. Currently showing data for: ${description.toLowerCase()}`
+    }
 
-    const currentScore = getCurrentWeekScore()
+    const currentScore = getEvaluationPeriodScore()
     const level = getPerformanceLevel(currentScore, target)
 
     if (level === 'Excellent') {
-      return `Great work! You're exceeding expectations with ${currentScore} points this week.`
+      return `Great work! You're exceeding expectations with ${currentScore} points over ${description.toLowerCase()}.`
     } else if (level === 'Good') {
       const pointsToExcellent = target.excellentThreshold - currentScore
-      return `You're on track for good performance. ${pointsToExcellent} more points to reach Excellent level.`
+      return `You're on track for good performance over ${description.toLowerCase()}. ${pointsToExcellent} more points to reach Excellent level.`
     } else if (level === 'Needs Improvement') {
       const pointsToGood = target.goodThreshold - currentScore
-      return `You need ${pointsToGood} more points this week to reach Good performance level.`
+      return `You need ${pointsToGood} more points over ${description.toLowerCase()} to reach Good performance level.`
     } else {
       const pointsNeeded = target.needsImprovementThreshold - currentScore
-      return `Focus up! You need ${pointsNeeded} more points to reach minimum expectations.`
+      return `Focus up! You need ${pointsNeeded} more points over ${description.toLowerCase()} to reach minimum expectations.`
     }
   }
 
   const getSmartInsights = (): string[] => {
     if (!roleWeights) return []
     
-    const dimensionScores = getCurrentDimensionScores()
+    const dimensionScores = getEvaluationPeriodDimensionScores()
     return generateInsights(dimensionScores, roleWeights)
   }
 
@@ -255,13 +281,24 @@ export default function Dashboard() {
 
   const weeklyScores = calculateWeeklyScores()
   const activeTarget = getActiveTarget()
-  const currentScore = getCurrentWeekScore()
+  const evaluationPeriod = getEvaluationPeriod()
+  const currentScore = getEvaluationPeriodScore()
   const currentLevel = activeTarget ? getPerformanceLevel(currentScore, activeTarget) : 'No Target Set'
   const insight = getInsight()
 
   return (
     <div className="space-y-6">
-      {/* Current Week Summary */}
+      {/* Evaluation Period Indicator */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center">
+          <Calendar className="h-5 w-5 text-blue-600 mr-2" />
+          <span className="text-blue-800 font-medium">
+            Evaluation Period: {evaluationPeriod.description}
+          </span>
+        </div>
+      </div>
+
+      {/* Current Period Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow p-6">
           <div className="flex items-center">
@@ -275,7 +312,7 @@ export default function Dashboard() {
               <p className="text-2xl font-bold text-gray-900">{currentScore}</p>
               {roleWeights && (
                 <p className="text-xs text-gray-500">
-                  Raw: {weeklyLogs.filter(log => log.week === getCurrentWeekString()).reduce((total, log) => {
+                  Raw: {weeklyLogs.filter(log => evaluationPeriod.weeks.includes(log.week)).reduce((total, log) => {
                     const safeCount = Number(safeValue(log.count)) || 0
                     const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
                     const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
@@ -283,6 +320,9 @@ export default function Dashboard() {
                   }, 0)} pts
                 </p>
               )}
+              <p className="text-xs text-gray-400 mt-1">
+                {evaluationPeriod.description}
+              </p>
             </div>
           </div>
         </div>
@@ -297,6 +337,11 @@ export default function Dashboard() {
               <p className={`text-sm font-semibold px-2 py-1 rounded-full ${getPerformanceColor(currentLevel)}`}>
                 {currentLevel}
               </p>
+              {activeTarget && (
+                <p className="text-xs text-gray-400 mt-1">
+                  Based on {activeTarget.name}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -307,10 +352,16 @@ export default function Dashboard() {
               <AlertTriangle className="h-6 w-6 text-yellow-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">Target</p>
-              <p className="text-sm text-gray-900">
-                {activeTarget ? `${activeTarget.goodThreshold}+ for Good` : 'Not Set'}
-              </p>
+              <p className="text-sm font-medium text-gray-600">Target Thresholds</p>
+              {activeTarget ? (
+                <div className="text-sm text-gray-900">
+                  <div>Excellent: {activeTarget.excellentThreshold}+</div>
+                  <div>Good: {activeTarget.goodThreshold}+</div>
+                  <div>Min: {activeTarget.needsImprovementThreshold}+</div>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-900">Not Set</p>
+              )}
             </div>
           </div>
         </div>
@@ -322,9 +373,10 @@ export default function Dashboard() {
           <div className="flex items-center mb-4">
             <Scale className="h-6 w-6 text-purple-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">IOOI Dimension Breakdown</h3>
+            <span className="ml-2 text-sm text-gray-500">({evaluationPeriod.description})</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(getCurrentDimensionScores()).map(([dimension, score]) => (
+            {Object.entries(getEvaluationPeriodDimensionScores()).map(([dimension, score]) => (
               <div key={dimension} className="text-center p-4 bg-gray-50 rounded-lg">
                 <div className={`text-3xl font-bold mb-2 ${
                   dimension === 'input' ? 'text-blue-600' :
@@ -344,10 +396,10 @@ export default function Dashboard() {
           <div className="mt-4 p-4 bg-purple-50 rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-purple-800">Weighted Final Score:</span>
-              <span className="text-lg font-bold text-purple-600">{getCurrentWeekScore()} points</span>
+              <span className="text-lg font-bold text-purple-600">{getEvaluationPeriodScore()} points</span>
             </div>
             <div className="text-xs text-purple-600 mt-1">
-              Using {roleWeights.name} role weights
+              Using {roleWeights.name} role weights • {evaluationPeriod.description}
             </div>
           </div>
         </div>
@@ -364,6 +416,7 @@ export default function Dashboard() {
           <div className="flex items-center mb-4">
             <Brain className="h-6 w-6 text-green-600 mr-2" />
             <h3 className="text-lg font-semibold text-gray-900">Smart Insights</h3>
+            <span className="ml-2 text-sm text-gray-500">({evaluationPeriod.description})</span>
           </div>
           <div className="space-y-3">
             {getSmartInsights().map((insight, index) => (

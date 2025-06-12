@@ -5,6 +5,18 @@ A modern web application for tracking engineering performance using the **IOOI F
 [![Production](https://img.shields.io/badge/Production-Live-brightgreen)](https://perf-mirror-rdbf.vercel.app/)
 [![Local Development](https://img.shields.io/badge/Development-Ready-blue)](#quick-start)
 
+## ✨ Key Features
+
+- **📊 IOOI Framework**: Structured performance tracking across Input, Output, Outcome, and Impact dimensions
+- **⚖️ Role-Based Scoring**: Customizable weights for Engineer, Manager, Senior Manager, Director roles
+- **🎯 Dynamic Evaluation Periods**: Performance targets with configurable time periods (1-52 weeks)
+- **📈 Smart Insights**: AI-powered pattern detection with actionable recommendations
+- **🔄 Real-Time Data Refresh**: Seamless data updates when switching between tabs
+- **📱 Modern UI**: Responsive design with interactive charts and real-time calculations
+- **🌐 Hybrid Database**: Seamless switching between SQLite (local) and Turso (production)
+- **🐳 Docker Ready**: Complete containerization with Make commands for easy deployment
+- **🚀 Production Ready**: Deployed on Vercel with automatic builds and health monitoring
+
 ## 🏗️ Architecture
 
 The application features a hybrid architecture that automatically switches between local SQLite (development) and cloud Turso database (production):
@@ -83,16 +95,6 @@ graph TB
     style IMPACT fill:#fce4ec
 ```
 
-## ✨ Key Features
-
-- **📊 IOOI Framework**: Structured performance tracking across Input, Output, Outcome, and Impact dimensions
-- **⚖️ Role-Based Scoring**: Customizable weights for Engineer, Manager, Senior Manager, Director roles
-- **📈 Smart Insights**: AI-powered pattern detection with actionable recommendations
-- **🎯 Performance Targets**: Configurable thresholds with visual progress tracking
-- **📱 Modern UI**: Responsive design with interactive charts and real-time calculations
-- **🔄 Hybrid Database**: Seamless switching between SQLite (local) and Turso (production)
-- **🚀 Production Ready**: Deployed on Vercel with automatic builds and health monitoring
-
 ## 🚀 Quick Start
 
 ### Option 1: Using Make (Recommended)
@@ -103,7 +105,11 @@ make setup
 make dev
 
 # Or quick start with Docker
-make quick-start
+make docker-build
+make docker-deploy
+
+# View all available commands
+make help
 ```
 
 ### Option 2: Manual Setup
@@ -122,14 +128,112 @@ npm run dev
 open http://localhost:3000
 ```
 
-## 🎯 Performance Levels
+### Option 3: Docker Development
 
-| Level | Weekly Points | Description |
-|-------|---------------|-------------|
-| **🌟 Excellent** | 225+ | Exceeding expectations across all dimensions |
-| **✅ Good** | 170+ | Meeting expectations with solid performance |
-| **⚠️ Needs Improvement** | 120+ | Below expectations, requires attention |
-| **❌ Unsatisfactory** | <120 | Significant performance concerns |
+```bash
+# Build and run with Docker Compose
+docker-compose up --build
+
+# Or use development mode with hot reload
+docker-compose -f docker-compose.dev.yml up
+```
+
+## 🎯 Performance Levels & Dynamic Evaluation
+
+### Configurable Performance Targets
+
+Performance targets now support **dynamic evaluation periods** from 1-52 weeks:
+
+| Level | Default Points | Evaluation Period | Description |
+|-------|----------------|-------------------|-------------|
+| **🌟 Excellent** | 225+ | Configurable | Exceeding expectations across all dimensions |
+| **✅ Good** | 170+ | Configurable | Meeting expectations with solid performance |
+| **⚠️ Needs Improvement** | 120+ | Configurable | Below expectations, requires attention |
+| **❌ Unsatisfactory** | <120 | Configurable | Significant performance concerns |
+
+### Example Evaluation Periods
+
+- **Weekly Reviews**: 1 week evaluation period
+- **Sprint Reviews**: 2-3 week evaluation periods  
+- **Monthly Reviews**: 4 week evaluation periods
+- **Quarterly Reviews**: 12 week evaluation periods
+- **Annual Reviews**: 52 week evaluation periods
+
+The dashboard automatically adjusts to show performance data for your active target's time period.
+
+## 🛠️ Technology Stack
+
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Frontend** | Next.js 14, React, TypeScript | Modern React framework with type safety |
+| **Styling** | Tailwind CSS | Utility-first CSS framework |
+| **Database** | SQLite + Turso | Local development + cloud production |
+| **ORM** | Prisma | Type-safe database access |
+| **Charts** | Recharts | Interactive data visualization |
+| **Deployment** | Vercel | Serverless hosting with automatic builds |
+| **Containerization** | Docker + Docker Compose | Development and production containers |
+| **Build Tools** | Make | Simplified command interface |
+
+## 📊 Quick Example
+
+```typescript
+// Weekly performance calculation with dynamic evaluation period
+const evaluationPeriod = activeTarget?.timePeriodWeeks || 1 // 1-52 weeks
+const weeks = getPreviousWeeks(evaluationPeriod)
+
+const weeklyScore = calculateWeightedScore({
+  input: 45,      // Code reviews, meetings
+  output: 85,     // Features, bug fixes  
+  outcome: 60,    // Design docs, proposals
+  impact: 30      // Mentoring, hiring
+}, roleWeights.manager); // 20%, 40%, 30%, 10%
+
+// Result: 67.5 weighted points over the evaluation period
+```
+
+## 🔧 Development Commands
+
+### Make Commands
+
+```bash
+# Development
+make setup          # Complete project setup
+make dev           # Start development server
+make build         # Build for production
+make clean         # Clean build artifacts
+
+# Database
+make db-push       # Push schema changes
+make db-studio     # Open Prisma Studio
+make db-reset      # Reset database
+
+# Docker
+make docker-build  # Build Docker image
+make docker-run    # Run container
+make docker-deploy # Deploy with compose
+make docker-clean  # Clean Docker artifacts
+
+# Testing & Quality
+make test          # Run tests
+make lint          # Run linter
+make format        # Format code
+```
+
+### Docker Commands
+
+```bash
+# Development with hot reload
+docker-compose -f docker-compose.dev.yml up
+
+# Production deployment
+docker-compose up --build
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
 
 ## 📚 Documentation
 
@@ -150,36 +254,30 @@ open http://localhost:3000
 - **[Architecture Deep Dive](docs/ARCHITECTURE.md)** - Technical implementation details
 - **[Contributing](docs/CONTRIBUTING.md)** - Development practices and contribution guidelines
 
-## 🛠️ Technology Stack
+## 🆕 Recent Updates
 
-| Category | Technology | Purpose |
-|----------|------------|---------|
-| **Frontend** | Next.js 14, React, TypeScript | Modern React framework with type safety |
-| **Styling** | Tailwind CSS | Utility-first CSS framework |
-| **Database** | SQLite + Turso | Local development + cloud production |
-| **ORM** | Prisma | Type-safe database access |
-| **Charts** | Recharts | Interactive data visualization |
-| **Deployment** | Vercel | Serverless hosting with automatic builds |
+### v2.1.0 - Dynamic Evaluation Periods
+- **🎯 Configurable Time Periods**: Performance targets now support 1-52 week evaluation periods
+- **📊 Dynamic Dashboard**: Dashboard automatically adjusts to show data for the active target's time period
+- **📅 Period Indicators**: Clear visual indicators showing current evaluation period
+- **🔄 Real-Time Updates**: Seamless data refresh when switching between tabs
 
-## 📊 Quick Example
+### v2.0.0 - Production Ready
+- **🌐 Hybrid Database**: Intelligent switching between SQLite (local) and Turso (production)
+- **🔧 Data Transformation**: Automatic handling of Turso's wrapped data format
+- **🐳 Docker Support**: Complete containerization with development and production configs
+- **⚡ Performance Optimizations**: Improved API response times and data loading
 
-```typescript
-// Weekly performance calculation
-const weeklyScore = calculateWeightedScore({
-  input: 45,      // Code reviews, meetings
-  output: 85,     // Features, bug fixes  
-  outcome: 60,    // Design docs, proposals
-  impact: 30      // Mentoring, hiring
-}, roleWeights.manager); // 20%, 40%, 30%, 10%
-
-// Result: 67.5 weighted points
-```
+### v1.5.0 - Enhanced UX
+- **🔄 Component Refresh**: Fixed data not showing until page refresh
+- **📱 Responsive Design**: Improved mobile and tablet experience
+- **🎨 UI Polish**: Enhanced visual design and user interactions
 
 ## 🔗 Related Resources
 
 ### Blog Posts & Methodology
-- **[The IOOI Framework Explained](https://blog.vardan.dev/iooi-framework)** - Deep dive into Input, Output, Outcome, Impact methodology
-- **[Engineering Performance Metrics That Matter](https://blog.vardan.dev/performance-metrics)** - Why traditional metrics fall short
+- **[The IOOI Framework Explained](https://vtorosyan.github.io/performance-reviews-quantification/)** - Deep dive into Input, Output, Outcome, Impact methodology
+- **[Engineering Manager Performance](https://vtorosyan.github.io/engineering-manager-performance/)** - Performance tracking for engineering managers
 - **[Building a Data-Driven Performance Culture](https://blog.vardan.dev/performance-culture)** - Implementation strategies for teams
 
 ### Open Source & Community
