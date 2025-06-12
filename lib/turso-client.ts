@@ -79,9 +79,6 @@ class TursoHttpClient {
         ]
       }
       
-      console.log(`🚀 [${queryId}] Making request to:`, this.baseUrl)
-      console.log(`📝 [${queryId}] Request body:`, JSON.stringify(requestBody).substring(0, 300) + '...')
-      
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
@@ -91,9 +88,6 @@ class TursoHttpClient {
         body: JSON.stringify(requestBody),
       })
 
-      console.log(`📡 [${queryId}] Response status:`, response.status, response.statusText)
-      console.log(`📊 [${queryId}] Response headers:`, Object.fromEntries(response.headers.entries()))
-
       if (!response.ok) {
         const errorText = await response.text()
         console.error(`❌ [${queryId}] HTTP error:`, response.status, errorText)
@@ -101,29 +95,11 @@ class TursoHttpClient {
       }
 
       const result = await response.json()
-      console.log(`✅ [${queryId}] Query successful`)
-      console.log(`📊 [${queryId}] Response structure:`, {
-        hasBaton: !!result.baton,
-        hasResults: !!result.results,
-        resultCount: result.results?.length || 0,
-        fullResultStructure: JSON.stringify(result).substring(0, 500) + '...'
-      })
       
       // Extract the actual query result from the v2/pipeline response
       if (result.results && result.results[0] && result.results[0].type === 'ok') {
         const executeResult = result.results[0].response?.result
         if (executeResult) {
-          console.log(`📊 [${queryId}] ExecuteResult structure:`, {
-            hasCols: !!executeResult.cols,
-            hasRows: !!executeResult.rows,
-            colsType: typeof executeResult.cols,
-            rowsType: typeof executeResult.rows,
-            colsLength: executeResult.cols?.length,
-            rowsLength: executeResult.rows?.length,
-            sampleCols: executeResult.cols?.slice(0, 3),
-            sampleRow: executeResult.rows?.[0]?.slice(0, 3)
-          })
-          
           // Convert v2/pipeline format to our expected format
           return {
             results: [{
