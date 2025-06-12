@@ -12,6 +12,29 @@ interface Category {
   description?: string
 }
 
+// Helper function to safely extract values and prevent React error #31
+const safeValue = (value: any): string | number => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object' && value && 'value' in value) {
+    return value.value
+  }
+  if (typeof value === 'object' && value && 'type' in value) {
+    return value.value || ''
+  }
+  return value
+}
+
+// Helper function to safely transform category data
+const transformCategory = (rawCategory: any): Category => {
+  return {
+    id: safeValue(rawCategory.id) as string,
+    name: safeValue(rawCategory.name) as string,
+    scorePerOccurrence: Number(safeValue(rawCategory.scorePerOccurrence)) || 0,
+    dimension: safeValue(rawCategory.dimension) as string,
+    description: rawCategory.description ? safeValue(rawCategory.description) as string : undefined
+  }
+}
+
 export default function Categories() {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
@@ -32,10 +55,18 @@ export default function Categories() {
   const fetchCategories = async () => {
     try {
       const response = await fetch('/api/categories')
-      const data = await response.json()
-      setCategories(data)
+      const rawData = await response.json()
+      
+      // Transform data to prevent React error #31
+      const transformedCategories = Array.isArray(rawData) 
+        ? rawData.map(transformCategory) 
+        : []
+      
+      console.log('📊 Categories loaded:', transformedCategories.length)
+      setCategories(transformedCategories)
     } catch (error) {
       console.error('Error fetching categories:', error)
+      setCategories([]) // Ensure we always have an array
     } finally {
       setLoading(false)
     }
@@ -251,16 +282,16 @@ export default function Categories() {
                 <div className="flex justify-between items-start">
                   <div className="flex-1">
                     <div className="flex items-center">
-                      <h3 className="text-lg font-semibold text-gray-900">{category.name}</h3>
-                      <span className={`ml-3 px-2 py-1 text-sm font-medium rounded-full ${getDimensionColor(category.dimension)}`}>
-                        {getDimensionLabel(category.dimension)}
+                      <h3 className="text-lg font-semibold text-gray-900">{safeValue(category.name)}</h3>
+                      <span className={`ml-3 px-2 py-1 text-sm font-medium rounded-full ${getDimensionColor(safeValue(category.dimension) as string)}`}>
+                        {getDimensionLabel(safeValue(category.dimension) as string)}
                       </span>
                       <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                        {category.scorePerOccurrence} pts
+                        {safeValue(category.scorePerOccurrence)} pts
                       </span>
                     </div>
                     {category.description && (
-                      <p className="text-gray-600 mt-1">{category.description}</p>
+                      <p className="text-gray-600 mt-1">{safeValue(category.description)}</p>
                     )}
                   </div>
                   

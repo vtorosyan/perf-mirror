@@ -22,6 +22,18 @@ interface Category {
   description?: string
 }
 
+// Helper function to safely extract values and prevent React error #31
+const safeValue = (value: any): string | number => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object' && value && 'value' in value) {
+    return value.value
+  }
+  if (typeof value === 'object' && value && 'type' in value) {
+    return value.value || ''
+  }
+  return value
+}
+
 interface WeeklyLog {
   id: string
   categoryId: string
@@ -62,10 +74,21 @@ export default function WeeklyLog() {
         fetch('/api/role-weights')
       ])
       
-      const categoriesData = await categoriesResponse.json()
+      const rawCategoriesData = await categoriesResponse.json()
       const weightsData = await weightsResponse.json()
       
-      setCategories(categoriesData)
+      // Transform categories data to prevent React error #31
+      const transformedCategories = Array.isArray(rawCategoriesData) 
+        ? rawCategoriesData.map((cat: any) => ({
+            id: safeValue(cat.id) as string,
+            name: safeValue(cat.name) as string,
+            scorePerOccurrence: Number(safeValue(cat.scorePerOccurrence)) || 0,
+            dimension: safeValue(cat.dimension) as string,
+            description: cat.description ? safeValue(cat.description) as string : undefined
+          }))
+        : []
+      
+      setCategories(transformedCategories)
       
       // Find active role weights
       const activeWeights = weightsData.find((weight: any) => weight.isActive)
@@ -84,7 +107,7 @@ export default function WeeklyLog() {
       }
       
       // Initialize log entries
-      const initialEntries = categoriesData.map((category: Category) => ({
+      const initialEntries = transformedCategories.map((category: Category) => ({
         categoryId: category.id,
         count: 0,
         overrideScore: undefined
@@ -354,13 +377,13 @@ export default function WeeklyLog() {
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
                             <div className="flex items-center">
-                              <h4 className="text-lg font-medium text-gray-900">{category.name}</h4>
+                              <h4 className="text-lg font-medium text-gray-900">{safeValue(category.name)}</h4>
                               <span className="ml-3 px-2 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full">
-                                {category.scorePerOccurrence} pts each
+                                {safeValue(category.scorePerOccurrence)} pts each
                               </span>
                             </div>
                             {category.description && (
-                              <p className="text-gray-600 mt-1 text-sm">{category.description}</p>
+                              <p className="text-gray-600 mt-1 text-sm">{safeValue(category.description)}</p>
                             )}
                           </div>
                           
