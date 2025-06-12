@@ -14,7 +14,11 @@ interface PerformanceTarget {
   createdAt: string
 }
 
-export default function PerformanceTargets() {
+interface PerformanceTargetsProps {
+  onDataChange?: () => void
+}
+
+export default function PerformanceTargets({ onDataChange }: PerformanceTargetsProps) {
   const [targets, setTargets] = useState<PerformanceTarget[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -76,6 +80,11 @@ export default function PerformanceTargets() {
       if (response.ok) {
         await fetchTargets()
         resetForm()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to save target')
@@ -109,6 +118,11 @@ export default function PerformanceTargets() {
 
       if (response.ok) {
         await fetchTargets()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to activate target')

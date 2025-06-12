@@ -14,7 +14,11 @@ interface RoleWeights {
   createdAt: string
 }
 
-export default function RoleWeights() {
+interface RoleWeightsProps {
+  onDataChange?: () => void
+}
+
+export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
   const [weights, setWeights] = useState<RoleWeights[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -78,16 +82,16 @@ export default function RoleWeights() {
     e.preventDefault()
     
     if (!formData.name) {
-      alert('Role name is required')
+      alert('Name is required')
       return
     }
 
-    // Validate weights sum to 1.0
+    // Validate weights sum to 1
     const total = parseFloat(formData.inputWeight) + parseFloat(formData.outputWeight) + 
                   parseFloat(formData.outcomeWeight) + parseFloat(formData.impactWeight)
     
-    if (Math.abs(total - 1.0) > 0.001) {
-      alert('Weights must sum to 1.0')
+    if (Math.abs(total - 1) > 0.001) {
+      alert('Weights must sum to 1.0. Use the Normalize button to fix this.')
       return
     }
 
@@ -104,6 +108,11 @@ export default function RoleWeights() {
       if (response.ok) {
         await fetchWeights()
         resetForm()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to save role weights')
@@ -137,6 +146,11 @@ export default function RoleWeights() {
 
       if (response.ok) {
         await fetchWeights()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to activate role weights')
@@ -438,4 +452,4 @@ export default function RoleWeights() {
       </div>
     </div>
   )
-} 
+}

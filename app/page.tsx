@@ -13,19 +13,41 @@ type Tab = 'dashboard' | 'log' | 'categories' | 'targets' | 'weights' | 'readme'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
-  const [dashboardRefreshKey, setDashboardRefreshKey] = useState<number>(0)
+  const [refreshKeys, setRefreshKeys] = useState({
+    dashboard: Date.now(),
+    log: Date.now(),
+    categories: Date.now(),
+    targets: Date.now(),
+    weights: Date.now()
+  })
   const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
     setMounted(true)
-    setDashboardRefreshKey(Date.now())
   }, [])
+  
+  const refreshComponent = (component: keyof typeof refreshKeys) => {
+    setRefreshKeys(prev => ({
+      ...prev,
+      [component]: Date.now()
+    }))
+  }
+  
+  const refreshDataComponents = () => {
+    // Refresh components that display data
+    setRefreshKeys(prev => ({
+      ...prev,
+      dashboard: Date.now(),
+      log: Date.now()
+    }))
+  }
   
   const handleTabSwitch = (tab: Tab) => {
     setActiveTab(tab)
-    // Only refresh Dashboard when switching TO it
-    if (tab === 'dashboard' && mounted) {
-      setDashboardRefreshKey(Date.now())
+    
+    // Always refresh the component we're switching TO to ensure fresh data
+    if (tab === 'dashboard' || tab === 'log') {
+      refreshComponent(tab)
     }
   }
   
@@ -106,11 +128,11 @@ export default function Home() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'dashboard' && <Dashboard key={`dashboard-${dashboardRefreshKey}`} />}
-        {activeTab === 'log' && <WeeklyLog />}
-        {activeTab === 'categories' && <Categories />}
-        {activeTab === 'targets' && <PerformanceTargets />}
-        {activeTab === 'weights' && <RoleWeights />}
+        {activeTab === 'dashboard' && <Dashboard key={`dashboard-${refreshKeys.dashboard}`} />}
+        {activeTab === 'log' && <WeeklyLog key={`log-${refreshKeys.log}`} onDataChange={refreshDataComponents} />}
+        {activeTab === 'categories' && <Categories key={`categories-${refreshKeys.categories}`} onDataChange={refreshDataComponents} />}
+        {activeTab === 'targets' && <PerformanceTargets key={`targets-${refreshKeys.targets}`} onDataChange={refreshDataComponents} />}
+        {activeTab === 'weights' && <RoleWeights key={`weights-${refreshKeys.weights}`} onDataChange={refreshDataComponents} />}
         {activeTab === 'readme' && <Readme />}
       </main>
     </div>

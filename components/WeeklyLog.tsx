@@ -49,7 +49,11 @@ interface LogEntry {
   overrideScore?: number
 }
 
-export default function WeeklyLog() {
+interface WeeklyLogProps {
+  onDataChange?: () => void
+}
+
+export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [weeklyLogs, setWeeklyLogs] = useState<WeeklyLog[]>([])
   const [roleWeights, setRoleWeights] = useState<RoleWeights | null>(null)
@@ -194,6 +198,12 @@ export default function WeeklyLog() {
       const responses = await Promise.all(savePromises)
       
       await fetchWeeklyLogs()
+      
+      // Notify parent component that data has changed
+      if (onDataChange) {
+        onDataChange()
+      }
+      
       alert('Weekly log saved successfully!')
     } catch (error) {
       console.error('Error saving weekly log:', error)

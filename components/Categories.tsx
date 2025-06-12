@@ -12,6 +12,10 @@ interface Category {
   description?: string
 }
 
+interface CategoriesProps {
+  onDataChange?: () => void
+}
+
 // Helper function to safely extract values and prevent React error #31
 const safeValue = (value: any): string | number => {
   if (value === null || value === undefined) return ''
@@ -35,7 +39,7 @@ const transformCategory = (rawCategory: any): Category => {
   }
 }
 
-export default function Categories() {
+export default function Categories({ onDataChange }: CategoriesProps) {
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -93,6 +97,11 @@ export default function Categories() {
       if (response.ok) {
         await fetchCategories()
         resetForm()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to save category')
@@ -126,6 +135,11 @@ export default function Categories() {
 
       if (response.ok) {
         await fetchCategories()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
       } else {
         const error = await response.json()
         alert(error.error || 'Failed to delete category')
