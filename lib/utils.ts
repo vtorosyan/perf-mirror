@@ -75,11 +75,26 @@ export function calculateDimensionScores(logs: any[]): DimensionScore {
 }
 
 export function calculateWeightedScore(dimensionScores: DimensionScore, weights: RoleWeights): number {
+  // Add safety checks for undefined weights to prevent NaN
+  const safeWeights = {
+    inputWeight: weights?.inputWeight ?? 0,
+    outputWeight: weights?.outputWeight ?? 0,
+    outcomeWeight: weights?.outcomeWeight ?? 0,
+    impactWeight: weights?.impactWeight ?? 0,
+  }
+  
+  const safeDimensions = {
+    input: dimensionScores?.input ?? 0,
+    output: dimensionScores?.output ?? 0,
+    outcome: dimensionScores?.outcome ?? 0,
+    impact: dimensionScores?.impact ?? 0,
+  }
+  
   return (
-    dimensionScores.input * weights.inputWeight +
-    dimensionScores.output * weights.outputWeight +
-    dimensionScores.outcome * weights.outcomeWeight +
-    dimensionScores.impact * weights.impactWeight
+    safeDimensions.input * safeWeights.inputWeight +
+    safeDimensions.output * safeWeights.outputWeight +
+    safeDimensions.outcome * safeWeights.outcomeWeight +
+    safeDimensions.impact * safeWeights.impactWeight
   )
 }
 
@@ -111,12 +126,12 @@ export function generateInsights(dimensionScores: DimensionScore, weights: RoleW
     return ['No activity logged this week']
   }
   
-  // Calculate percentages
+  // Calculate percentages with safety check for division by zero
   const percentages = {
-    input: (dimensionScores.input / total) * 100,
-    output: (dimensionScores.output / total) * 100,
-    outcome: (dimensionScores.outcome / total) * 100,
-    impact: (dimensionScores.impact / total) * 100
+    input: total > 0 ? (dimensionScores.input / total) * 100 : 0,
+    output: total > 0 ? (dimensionScores.output / total) * 100 : 0,
+    outcome: total > 0 ? (dimensionScores.outcome / total) * 100 : 0,
+    impact: total > 0 ? (dimensionScores.impact / total) * 100 : 0
   }
   
   // High input, low outcome pattern
