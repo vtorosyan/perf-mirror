@@ -1,4 +1,5 @@
 // Custom Turso HTTP client for serverless environments
+// Updated: 2025-06-12 - Fixed stmt format for Turso API
 interface TursoResponse {
   results?: Array<{
     columns: string[]
