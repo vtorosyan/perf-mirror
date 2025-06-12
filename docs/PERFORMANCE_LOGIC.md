@@ -264,6 +264,5 @@ The system analyzes your IOOI distribution to identify patterns:
 
 ## Related Resources
 
-- **[IOOI Framework Deep Dive](https://blog.vardan.dev/iooi-framework)** - Comprehensive explanation of the methodology
-- **[Engineering Performance Metrics](https://blog.vardan.dev/performance-metrics)** - Why traditional metrics fail
-- **[Building Performance Culture](https://blog.vardan.dev/performance-culture)** - Team implementation strategies 
+- **[IOOI Framework Deep Dive](https://vtorosyan.github.io/performance-reviews-quantification/)
+- **[IOOI Framework for Managers](https://vtorosyan.github.io/engineering-manager-performance/)**
