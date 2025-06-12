@@ -53,7 +53,7 @@ class TursoHttpClient {
     
     try {
       const requestBody = {
-        sql,
+        stmt: sql,
         args: params,
       }
       
