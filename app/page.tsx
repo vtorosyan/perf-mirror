@@ -13,11 +13,14 @@ type Tab = 'dashboard' | 'log' | 'categories' | 'targets' | 'weights' | 'readme'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
-  const [tabSwitchTime, setTabSwitchTime] = useState<number>(Date.now())
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState<number>(Date.now())
   
   const handleTabSwitch = (tab: Tab) => {
     setActiveTab(tab)
-    setTabSwitchTime(Date.now()) // Force fresh data fetch
+    // Only refresh Dashboard when switching TO it
+    if (tab === 'dashboard') {
+      setDashboardRefreshKey(Date.now())
+    }
   }
 
   const tabs = [
@@ -67,12 +70,12 @@ export default function Home() {
       </nav>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'dashboard' && <Dashboard key={`dashboard-${tabSwitchTime}`} />}
-        {activeTab === 'log' && <WeeklyLog key={`log-${tabSwitchTime}`} />}
-        {activeTab === 'categories' && <Categories key={`categories-${tabSwitchTime}`} />}
-        {activeTab === 'targets' && <PerformanceTargets key={`targets-${tabSwitchTime}`} />}
-        {activeTab === 'weights' && <RoleWeights key={`weights-${tabSwitchTime}`} />}
-        {activeTab === 'readme' && <Readme key={`readme-${tabSwitchTime}`} />}
+        {activeTab === 'dashboard' && <Dashboard key={`dashboard-${dashboardRefreshKey}`} />}
+        {activeTab === 'log' && <WeeklyLog />}
+        {activeTab === 'categories' && <Categories />}
+        {activeTab === 'targets' && <PerformanceTargets />}
+        {activeTab === 'weights' && <RoleWeights />}
+        {activeTab === 'readme' && <Readme />}
       </main>
     </div>
   )

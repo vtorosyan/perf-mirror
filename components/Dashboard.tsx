@@ -250,8 +250,20 @@ export default function Dashboard() {
               <TrendingUp className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-gray-600">This Week's Score</p>
+              <p className="text-sm font-medium text-gray-600">
+                {roleWeights ? 'Weighted Score' : 'Raw Total Score'}
+              </p>
               <p className="text-2xl font-bold text-gray-900">{currentScore}</p>
+              {roleWeights && (
+                <p className="text-xs text-gray-500">
+                  Raw: {weeklyLogs.filter(log => log.week === getCurrentWeekString()).reduce((total, log) => {
+                    const safeCount = Number(safeValue(log.count)) || 0
+                    const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
+                    const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
+                    return total + (safeOverrideScore ?? (safeCount * safeScorePerOccurrence))
+                  }, 0)} pts
+                </p>
+              )}
             </div>
           </div>
         </div>
