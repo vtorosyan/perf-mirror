@@ -52,13 +52,41 @@ export async function GET(request: NextRequest) {
     console.log('🔍 Raw logs from Prisma:', JSON.stringify(logs.slice(0, 2), null, 2))
     console.log('🔍 First log category:', logs[0]?.category)
 
+    // Check if categories are missing and fetch them manually if needed
+    let logsWithCategories: any[] = logs
+    if (logs.length > 0 && !logs[0].category) {
+      console.log('⚠️ Categories missing from Prisma include, fetching manually...')
+      
+      // Get unique category IDs
+      const categoryIds = Array.from(new Set(logs.map(log => safeValue(log.categoryId)).filter(Boolean)))
+      console.log('🔍 Category IDs to fetch:', categoryIds)
+      
+      // Fetch categories separately
+      const categories = await prisma.category.findMany({
+        where: { id: { in: categoryIds } }
+      })
+      console.log('🔍 Fetched categories:', categories.length)
+      
+      // Create a map for quick lookup
+      const categoryMap = new Map(categories.map(cat => [safeValue(cat.id), cat]))
+      
+      // Attach categories to logs
+      logsWithCategories = logs.map(log => ({
+        ...log,
+        category: categoryMap.get(safeValue(log.categoryId))
+      }))
+      
+      console.log('🔍 First log with manually attached category:', logsWithCategories[0]?.category)
+    }
+
     // Transform the data to handle Turso's wrapped format
-    const transformedLogs = logs.map(transformWeeklyLog).filter(log => log !== null)
+    const transformedLogs = logsWithCategories.map(transformWeeklyLog).filter(log => log !== null)
 
     console.log('🔍 Transformed logs:', JSON.stringify(transformedLogs.slice(0, 2), null, 2))
 
     return NextResponse.json(transformedLogs)
   } catch (error) {
+    console.error('❌ Error in weekly-logs API:', error)
     return NextResponse.json({ error: 'Failed to fetch weekly logs' }, { status: 500 })
   }
 }
