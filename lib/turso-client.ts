@@ -38,8 +38,8 @@ class TursoHttpClient {
     console.log('📍 Input database URL:', databaseUrl.substring(0, 30) + '...')
     console.log('🔑 Auth token length:', authToken.length)
     
-    // Convert libsql://database-name-org.turso.io to https://database-name-org.turso.io/v1/execute
-    this.baseUrl = databaseUrl.replace('libsql://', 'https://') + '/v1/execute'
+    // Convert libsql://database-name-org.turso.io to https://database-name-org.turso.io/v2/pipeline
+    this.baseUrl = databaseUrl.replace('libsql://', 'https://') + '/v2/pipeline'
     this.authToken = authToken
     
     console.log('🌐 Turso HTTP client initialized')
@@ -53,13 +53,41 @@ class TursoHttpClient {
     console.log(`📊 [${queryId}] Query params:`, params.length, 'parameters')
     
     try {
+      // Use the correct Turso v2/pipeline format
       const requestBody = {
-        stmt: sql,
-        args: params,
+        requests: [
+          {
+            type: "execute",
+            stmt: {
+              sql: sql,
+              args: params.map(param => {
+                // Convert parameters to Turso's expected format
+                if (typeof param === 'string') {
+                  return { type: "text", value: param }
+                } else if (typeof param === 'number') {
+                  if (Number.isInteger(param)) {
+                    return { type: "integer", value: param.toString() }
+                  } else {
+                    return { type: "float", value: param.toString() }
+                  }
+                } else if (typeof param === 'boolean') {
+                  return { type: "integer", value: param ? "1" : "0" }
+                } else if (param === null || param === undefined) {
+                  return { type: "null" }
+                } else {
+                  return { type: "text", value: String(param) }
+                }
+              })
+            }
+          },
+          {
+            type: "close"
+          }
+        ]
       }
       
       console.log(`🚀 [${queryId}] Making request to:`, this.baseUrl)
-      console.log(`📝 [${queryId}] Request body:`, JSON.stringify(requestBody).substring(0, 200) + '...')
+      console.log(`📝 [${queryId}] Request body:`, JSON.stringify(requestBody).substring(0, 300) + '...')
       
       const response = await fetch(this.baseUrl, {
         method: 'POST',
@@ -82,18 +110,34 @@ class TursoHttpClient {
       const result = await response.json()
       console.log(`✅ [${queryId}] Query successful`)
       console.log(`📊 [${queryId}] Response structure:`, {
+        hasBaton: !!result.baton,
         hasResults: !!result.results,
-        resultCount: result.results?.length || 0,
-        firstResultColumns: result.results?.[0]?.columns?.length || 0,
-        firstResultRows: result.results?.[0]?.rows?.length || 0,
-        hasError: !!result.error
+        resultCount: result.results?.length || 0
       })
       
-      if (result.error) {
-        console.error(`❌ [${queryId}] Database error:`, result.error)
+      // Extract the actual query result from the v2/pipeline response
+      if (result.results && result.results[0] && result.results[0].type === 'ok') {
+        const executeResult = result.results[0].response?.result
+        if (executeResult) {
+          // Convert v2/pipeline format to our expected format
+          return {
+            results: [{
+              columns: executeResult.cols || [],
+              rows: executeResult.rows || []
+            }]
+          }
+        }
       }
       
-      return result
+      // Handle error responses
+      if (result.results && result.results[0] && result.results[0].type === 'error') {
+        const error = result.results[0].error
+        console.error(`❌ [${queryId}] Database error:`, error)
+        return { error: error.message || 'Database error' }
+      }
+      
+      console.log(`📭 [${queryId}] No data in response`)
+      return { results: [{ columns: [], rows: [] }] }
     } catch (error) {
       console.error(`❌ [${queryId}] Turso HTTP query failed:`, error)
       console.error(`❌ [${queryId}] Error details:`, {
