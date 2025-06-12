@@ -5,23 +5,34 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
-  // Log which database is being used
+  // Log which database configuration is being used
   if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
-    console.log('🌐 Using Turso database for production')
-  } else {
-    console.log('💾 Using local SQLite database for development')
-  }
-
-  return new PrismaClient({
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    datasources: {
-      db: {
-        url: process.env.TURSO_DATABASE_URL 
-          ? `${process.env.TURSO_DATABASE_URL}?authToken=${process.env.TURSO_AUTH_TOKEN}`
-          : process.env.DATABASE_URL
+    console.log('🌐 Using Turso cloud database')
+    
+    // Use Turso with auth token
+    return new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      datasources: {
+        db: {
+          url: `${process.env.TURSO_DATABASE_URL}?authToken=${process.env.TURSO_AUTH_TOKEN}`
+        }
       }
-    }
-  })
+    })
+  } else if (process.env.DATABASE_URL) {
+    console.log('💾 Using configured DATABASE_URL')
+    
+    // Use configured DATABASE_URL (local SQLite or other)
+    return new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    })
+  } else {
+    console.log('⚠️  No database configuration found, using default')
+    
+    // Fallback to default configuration
+    return new PrismaClient({
+      log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    })
+  }
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient()
