@@ -16,37 +16,43 @@ function createPrismaClient(): PrismaClient {
       hasDatabaseUrl: !!process.env.DATABASE_URL,
     })
 
-    // Determine the database URL to use
-    let databaseUrl: string
-    
-    if (process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
-      // For Turso, we need to use a direct connection approach
-      console.log('🌐 Using Turso cloud database')
-      databaseUrl = process.env.TURSO_DATABASE_URL
+    // For production with Turso, use DATABASE_URL with auth token
+    if (process.env.NODE_ENV === 'production' && process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN) {
+      console.log('🌐 Using Turso cloud database for production')
       
-      // For now, fall back to local SQLite since libSQL adapter has compatibility issues
-      console.log('⚠️  LibSQL adapter has compatibility issues, falling back to local SQLite')
-      databaseUrl = process.env.DATABASE_URL || "file:./dev.db"
+      // Create a Turso connection URL with auth token as query parameter
+      const tursoUrl = new URL(process.env.TURSO_DATABASE_URL)
+      tursoUrl.searchParams.set('authToken', process.env.TURSO_AUTH_TOKEN)
       
-    } else if (process.env.DATABASE_URL) {
-      console.log('💾 Using configured DATABASE_URL')
-      databaseUrl = process.env.DATABASE_URL
-    } else {
-      console.log('📁 Using default local SQLite database')
-      databaseUrl = "file:./dev.db"
+      return new PrismaClient({
+        datasources: {
+          db: {
+            url: tursoUrl.toString()
+          }
+        },
+        log: ['error'],
+      })
     }
 
-    // Create Prisma client with the determined URL
-    const client = new PrismaClient({
+    // For development, prefer local SQLite
+    if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('file:')) {
+      console.log('💾 Using local SQLite database:', process.env.DATABASE_URL.substring(0, 20) + '...')
+      
+      return new PrismaClient({
+        log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+      })
+    }
+
+    // Default fallback to local SQLite
+    console.log('📁 Using default local SQLite database')
+    return new PrismaClient({
       datasources: {
         db: {
-          url: databaseUrl
+          url: "file:./dev.db"
         }
       },
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     })
-
-    return client
 
   } catch (error) {
     console.error('❌ Error creating Prisma client:', error)
