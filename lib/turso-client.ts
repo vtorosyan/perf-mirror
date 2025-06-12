@@ -24,13 +24,18 @@ class TursoHttpClient {
   private authToken: string
 
   constructor(databaseUrl: string, authToken: string) {
-    // Convert libsql:// to https:// for HTTP API
-    this.baseUrl = databaseUrl.replace('libsql://', 'https://').replace('.turso.io', '.turso.io/v1/execute')
+    // Convert libsql://database-name-org.turso.io to https://database-name-org.turso.io/v1/execute
+    this.baseUrl = databaseUrl.replace('libsql://', 'https://') + '/v1/execute'
     this.authToken = authToken
+    
+    console.log('🌐 Turso HTTP client initialized')
+    console.log('📍 Base URL:', this.baseUrl)
   }
 
   private async executeQuery(sql: string, params: any[] = []): Promise<TursoResponse> {
     try {
+      console.log('🔍 Executing query:', sql.substring(0, 100) + '...')
+      
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
@@ -43,13 +48,19 @@ class TursoHttpClient {
         }),
       })
 
+      console.log('📡 Response status:', response.status)
+
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+        const errorText = await response.text()
+        console.error('❌ HTTP error:', response.status, errorText)
+        throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`)
       }
 
-      return await response.json()
+      const result = await response.json()
+      console.log('✅ Query successful, rows:', result.results?.[0]?.rows?.length || 0)
+      return result
     } catch (error) {
-      console.error('Turso HTTP query failed:', error)
+      console.error('❌ Turso HTTP query failed:', error)
       throw error
     }
   }
@@ -58,6 +69,7 @@ class TursoHttpClient {
     const sql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights ORDER BY createdAt ASC'
     
     try {
+      console.log('🔍 Fetching role weights from Turso...')
       const result = await this.executeQuery(sql)
       
       if (result.error) {
@@ -65,20 +77,24 @@ class TursoHttpClient {
       }
 
       if (!result.results || !result.results[0]) {
+        console.log('📭 No role weights found')
         return []
       }
 
       const { columns, rows } = result.results[0]
       
-      return rows.map(row => {
+      const records = rows.map(row => {
         const record: any = {}
         columns.forEach((col, index) => {
           record[col] = row[index]
         })
         return record as DatabaseRecord
       })
+      
+      console.log('✅ Role weights fetched:', records.length)
+      return records
     } catch (error) {
-      console.error('Error fetching role weights from Turso:', error)
+      console.error('❌ Error fetching role weights from Turso:', error)
       return []
     }
   }
@@ -87,6 +103,7 @@ class TursoHttpClient {
     const sql = 'SELECT id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget ORDER BY createdAt DESC'
     
     try {
+      console.log('🔍 Fetching targets from Turso...')
       const result = await this.executeQuery(sql)
       
       if (result.error) {
@@ -94,20 +111,24 @@ class TursoHttpClient {
       }
 
       if (!result.results || !result.results[0]) {
+        console.log('📭 No targets found')
         return []
       }
 
       const { columns, rows } = result.results[0]
       
-      return rows.map(row => {
+      const records = rows.map(row => {
         const record: any = {}
         columns.forEach((col, index) => {
           record[col] = row[index]
         })
         return record
       })
+      
+      console.log('✅ Targets fetched:', records.length)
+      return records
     } catch (error) {
-      console.error('Error fetching targets from Turso:', error)
+      console.error('❌ Error fetching targets from Turso:', error)
       return []
     }
   }
@@ -116,6 +137,7 @@ class TursoHttpClient {
     const sql = 'SELECT id, name, scorePerOccurrence, dimension, description, createdAt, updatedAt FROM Category ORDER BY createdAt ASC'
     
     try {
+      console.log('🔍 Fetching categories from Turso...')
       const result = await this.executeQuery(sql)
       
       if (result.error) {
@@ -123,20 +145,24 @@ class TursoHttpClient {
       }
 
       if (!result.results || !result.results[0]) {
+        console.log('📭 No categories found')
         return []
       }
 
       const { columns, rows } = result.results[0]
       
-      return rows.map(row => {
+      const records = rows.map(row => {
         const record: any = {}
         columns.forEach((col, index) => {
           record[col] = row[index]
         })
         return record
       })
+      
+      console.log('✅ Categories fetched:', records.length)
+      return records
     } catch (error) {
-      console.error('Error fetching categories from Turso:', error)
+      console.error('❌ Error fetching categories from Turso:', error)
       return []
     }
   }
@@ -154,6 +180,11 @@ class TursoHttpClient {
     sql += ' ORDER BY week DESC'
     
     try {
+      console.log('🔍 Fetching weekly logs from Turso...')
+      if (weekFilter) {
+        console.log('📅 Week filter:', weekFilter.length, 'weeks')
+      }
+      
       const result = await this.executeQuery(sql, params)
       
       if (result.error) {
@@ -161,20 +192,24 @@ class TursoHttpClient {
       }
 
       if (!result.results || !result.results[0]) {
+        console.log('📭 No weekly logs found')
         return []
       }
 
       const { columns, rows } = result.results[0]
       
-      return rows.map(row => {
+      const records = rows.map(row => {
         const record: any = {}
         columns.forEach((col, index) => {
           record[col] = row[index]
         })
         return record
       })
+      
+      console.log('✅ Weekly logs fetched:', records.length)
+      return records
     } catch (error) {
-      console.error('Error fetching weekly logs from Turso:', error)
+      console.error('❌ Error fetching weekly logs from Turso:', error)
       return []
     }
   }
