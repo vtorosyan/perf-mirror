@@ -454,36 +454,37 @@ class TursoHttpClient {
     console.log('📝 updateManyRoleWeights: Where:', where, 'Data:', data)
     
     try {
-      // Build WHERE clause
-      let whereClause = ''
-      let params: any[] = []
-      
-      const conditions: string[] = []
-      
-      if (where.isActive === true) {
-        conditions.push('ISACTIVE = ?')
-        params.push('1')
-      }
-      
-      if (where.id && where.id.not) {
-        conditions.push('ID != ?')
-        params.push(where.id.not)
-      }
-      
-      if (conditions.length > 0) {
-        whereClause = 'WHERE ' + conditions.join(' AND ')
-      }
-      
-      // Build SET clause
+      // Build SET clause first and collect its parameters
       const setClauses: string[] = []
+      const setParams: any[] = []
+      
       if (data.isActive !== undefined) {
         setClauses.push('ISACTIVE = ?')
-        params.push(data.isActive ? '1' : '0')
+        setParams.push(data.isActive ? '1' : '0')
       }
       
       if (setClauses.length === 0) {
         throw new Error('No data provided for update')
       }
+      
+      // Build WHERE clause and collect its parameters
+      const conditions: string[] = []
+      const whereParams: any[] = []
+      
+      if (where.isActive === true) {
+        conditions.push('ISACTIVE = ?')
+        whereParams.push('1')
+      }
+      
+      if (where.id && where.id.not) {
+        conditions.push('ID != ?')
+        whereParams.push(where.id.not)
+      }
+      
+      const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+      
+      // Combine parameters in correct order: SET parameters first, then WHERE parameters
+      const params = [...setParams, ...whereParams]
       
       const sql = `UPDATE RoleWeights SET ${setClauses.join(', ')} ${whereClause}`
       console.log('🔍 updateManyRoleWeights: SQL:', sql, 'Params:', params)
@@ -494,7 +495,7 @@ class TursoHttpClient {
         throw new Error(result.error)
       }
       
-      console.log('✅ updateManyRoleWeights: Bulk update completed')
+      console.log('✅ updateManyRoleWeights: Bulk update completed successfully')
       return { count: 1 } // Turso doesn't return affected rows count, so we return 1
     } catch (error) {
       console.error('❌ updateManyRoleWeights: Error updating role weights in Turso:', error)
