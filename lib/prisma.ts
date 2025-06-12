@@ -150,6 +150,15 @@ const createHybridClient = () => {
         console.log('📞 Hybrid client: roleWeights.findMany() called with Turso')
         return await tursoClient.findManyRoleWeights()
       },
+      findFirst: async (...args: any[]) => {
+        console.log('📞 Hybrid client: roleWeights.findFirst() called with Turso')
+        return await tursoClient.findFirstRoleWeights()
+      },
+      create: async (options: { data: any }) => {
+        console.log('📞 Hybrid client: roleWeights.create() called with Turso')
+        console.log('📝 Create data:', options.data)
+        return await tursoClient.createRoleWeight(options.data)
+      },
     }
     
     hybridClient.performanceTarget = {

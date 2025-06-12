@@ -19,6 +19,15 @@ interface DatabaseRecord {
   updatedAt: string
 }
 
+interface CreateRoleWeightData {
+  name: string
+  inputWeight: number
+  outputWeight: number
+  outcomeWeight: number
+  impactWeight: number
+  isActive: boolean
+}
+
 class TursoHttpClient {
   private baseUrl: string
   private authToken: string
@@ -95,6 +104,11 @@ class TursoHttpClient {
     }
   }
 
+  private generateId(): string {
+    // Generate a simple ID similar to Prisma's cuid format
+    return 'cmbs' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+  }
+
   async findManyRoleWeights(): Promise<DatabaseRecord[]> {
     const sql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights ORDER BY createdAt ASC'
     
@@ -132,6 +146,99 @@ class TursoHttpClient {
     } catch (error) {
       console.error('❌ findManyRoleWeights: Error fetching role weights from Turso:', error)
       return []
+    }
+  }
+
+  async findFirstRoleWeights(): Promise<DatabaseRecord | null> {
+    const sql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights ORDER BY createdAt ASC LIMIT 1'
+    
+    try {
+      console.log('🔍 findFirstRoleWeights: Fetching first role weight from Turso...')
+      const result = await this.executeQuery(sql)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
+        console.log('📭 findFirstRoleWeights: No role weights found')
+        return null
+      }
+
+      const { columns, rows } = result.results[0]
+      console.log('📊 findFirstRoleWeights: Processing first record')
+      
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        record[col] = rows[0][colIndex]
+      })
+      
+      console.log('✅ findFirstRoleWeights: First role weight found:', {
+        id: record.id,
+        name: record.name,
+        isActive: record.isActive
+      })
+      
+      return record as DatabaseRecord
+    } catch (error) {
+      console.error('❌ findFirstRoleWeights: Error fetching first role weight from Turso:', error)
+      return null
+    }
+  }
+
+  async createRoleWeight(data: CreateRoleWeightData): Promise<DatabaseRecord> {
+    const id = this.generateId()
+    const now = new Date().toISOString()
+    
+    const sql = `INSERT INTO RoleWeights (id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
+                 RETURNING id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt`
+    
+    const params = [
+      id,
+      data.name,
+      data.inputWeight,
+      data.outputWeight,
+      data.outcomeWeight,
+      data.impactWeight,
+      data.isActive ? 1 : 0, // SQLite uses 1/0 for boolean
+      now,
+      now
+    ]
+    
+    try {
+      console.log('🔍 createRoleWeight: Creating role weight in Turso...')
+      console.log('📝 createRoleWeight: Data:', { id, ...data })
+      
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
+        throw new Error('No data returned from CREATE query')
+      }
+
+      const { columns, rows } = result.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        record[col] = rows[0][colIndex]
+      })
+      
+      // Convert SQLite boolean back to JS boolean
+      record.isActive = record.isActive === 1
+      
+      console.log('✅ createRoleWeight: Role weight created successfully:', {
+        id: record.id,
+        name: record.name,
+        isActive: record.isActive
+      })
+      
+      return record as DatabaseRecord
+    } catch (error) {
+      console.error('❌ createRoleWeight: Error creating role weight in Turso:', error)
+      throw error
     }
   }
 
