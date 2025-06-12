@@ -71,7 +71,6 @@ export default function Dashboard() {
       setTargets(targetsData)
       
       // Find active role weights
-      console.log('📊 Dashboard: Role weights data:', weightsData)
       const activeWeights = weightsData.find((weight: any) => weight.isActive)
       if (activeWeights) {
         // Validate weight values
@@ -264,7 +263,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-sm font-medium text-gray-900">{getDimensionLabel(dimension)}</div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {((roleWeights[`${dimension}Weight` as keyof RoleWeights] as number || 0) * 100).toFixed(0)}% weight
+                  {(((roleWeights[`${dimension}Weight` as keyof RoleWeights] as number ?? 0) * 100) || 0).toFixed(0)}% weight
                 </div>
               </div>
             ))}

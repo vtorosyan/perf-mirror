@@ -51,7 +51,6 @@ export default function RoleWeights() {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
       const data = await response.json()
-      console.log('📊 Role weights fetched:', data)
       
       // Validate data structure
       if (Array.isArray(data)) {
@@ -203,32 +202,44 @@ export default function RoleWeights() {
       </div>
 
       {/* Active Weights Summary */}
-      {activeWeights && (
+      {activeWeights ? (
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg shadow p-6 text-white">
           <div className="flex items-center mb-4">
             <CheckCircle className="h-6 w-6 mr-2" />
-            <h3 className="text-lg font-semibold">Active Role: {activeWeights.name}</h3>
+            <h3 className="text-lg font-semibold">Active Role: {activeWeights.name || 'Unknown'}</h3>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="text-center">
-              <div className="text-2xl font-bold">{((activeWeights.inputWeight || 0) * 100).toFixed(0)}%</div>
+              <div className="text-2xl font-bold">{(((activeWeights.inputWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
               <div className="text-purple-100">Input</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">{((activeWeights.outputWeight || 0) * 100).toFixed(0)}%</div>
+              <div className="text-2xl font-bold">{(((activeWeights.outputWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
               <div className="text-purple-100">Output</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">{((activeWeights.outcomeWeight || 0) * 100).toFixed(0)}%</div>
+              <div className="text-2xl font-bold">{(((activeWeights.outcomeWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
               <div className="text-purple-100">Outcome</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-bold">{((activeWeights.impactWeight || 0) * 100).toFixed(0)}%</div>
+              <div className="text-2xl font-bold">{(((activeWeights.impactWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
               <div className="text-purple-100">Impact</div>
             </div>
           </div>
         </div>
-      )}
+      ) : weights.length > 0 ? (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg shadow p-6">
+          <div className="flex items-center mb-4">
+            <svg className="h-6 w-6 text-yellow-600 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <h3 className="text-lg font-semibold text-yellow-800">No Active Role Weights</h3>
+          </div>
+          <p className="text-yellow-700 mb-4">
+            Please activate one of the role weight configurations below to enable weighted scoring.
+          </p>
+        </div>
+      ) : null}
 
       {/* Add/Edit Form */}
       {showAddForm && (
@@ -386,19 +397,19 @@ export default function RoleWeights() {
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-3">
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <div className="text-lg font-bold text-blue-600">{((roleWeights.inputWeight || 0) * 100).toFixed(0)}%</div>
+                      <div className="text-lg font-bold text-blue-600">{(((roleWeights.inputWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
                       <div className="text-sm text-blue-700">Input</div>
                     </div>
                     <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <div className="text-lg font-bold text-green-600">{((roleWeights.outputWeight || 0) * 100).toFixed(0)}%</div>
+                      <div className="text-lg font-bold text-green-600">{(((roleWeights.outputWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
                       <div className="text-sm text-green-700">Output</div>
                     </div>
                     <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <div className="text-lg font-bold text-purple-600">{((roleWeights.outcomeWeight || 0) * 100).toFixed(0)}%</div>
+                      <div className="text-lg font-bold text-purple-600">{(((roleWeights.outcomeWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
                       <div className="text-sm text-purple-700">Outcome</div>
                     </div>
                     <div className="text-center p-3 bg-orange-50 rounded-lg">
-                      <div className="text-lg font-bold text-orange-600">{((roleWeights.impactWeight || 0) * 100).toFixed(0)}%</div>
+                      <div className="text-lg font-bold text-orange-600">{(((roleWeights.impactWeight ?? 0) * 100) || 0).toFixed(0)}%</div>
                       <div className="text-sm text-orange-700">Impact</div>
                     </div>
                   </div>

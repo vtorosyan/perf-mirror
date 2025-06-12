@@ -68,7 +68,6 @@ export default function WeeklyLog() {
       setCategories(categoriesData)
       
       // Find active role weights
-      console.log('📊 WeeklyLog: Role weights data:', weightsData)
       const activeWeights = weightsData.find((weight: any) => weight.isActive)
       if (activeWeights) {
         // Validate weight values
@@ -319,7 +318,7 @@ export default function WeeklyLog() {
                 </div>
                 <div className="text-sm text-gray-600">{getDimensionLabel(dimension)}</div>
                 <div className="text-xs text-gray-500">
-                  {((roleWeights[`${dimension}Weight` as keyof RoleWeights] as number || 0) * 100).toFixed(0)}% weight
+                  {(((roleWeights[`${dimension}Weight` as keyof RoleWeights] as number ?? 0) * 100) || 0).toFixed(0)}% weight
                 </div>
               </div>
             ))}
