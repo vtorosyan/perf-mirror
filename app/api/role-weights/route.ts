@@ -5,20 +5,58 @@ import { prisma } from '@/lib/prisma'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  const requestId = Math.random().toString(36).substring(7)
+  console.log(`🌐 [${requestId}] GET /api/role-weights - Request started`)
+  console.log(`🔍 [${requestId}] Environment:`, {
+    NODE_ENV: process.env.NODE_ENV,
+    hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
+    hasTursoToken: !!process.env.TURSO_AUTH_TOKEN,
+    timestamp: new Date().toISOString()
+  })
+  
   try {
+    console.log(`📞 [${requestId}] Calling prisma.roleWeights.findMany()...`)
+    console.log(`🔍 [${requestId}] Prisma client type:`, typeof prisma)
+    console.log(`🔍 [${requestId}] Prisma roleWeights type:`, typeof prisma.roleWeights)
+    console.log(`🔍 [${requestId}] Prisma roleWeights.findMany type:`, typeof prisma.roleWeights?.findMany)
+    
     const weights = await prisma.roleWeights.findMany({
       orderBy: { createdAt: 'asc' }
     })
+    
+    console.log(`✅ [${requestId}] Successfully fetched role weights:`, weights.length, 'records')
+    console.log(`📊 [${requestId}] Sample record:`, weights[0] ? {
+      id: weights[0].id,
+      name: weights[0].name,
+      isActive: weights[0].isActive
+    } : 'No records found')
+    
     return NextResponse.json(weights)
   } catch (error) {
-    console.error('Error in GET /api/role-weights:', error)
-    return NextResponse.json({ error: 'Failed to fetch role weights' }, { status: 500 })
+    console.error(`❌ [${requestId}] Error in GET /api/role-weights:`, error)
+    console.error(`❌ [${requestId}] Error details:`, {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack?.split('\n').slice(0, 5).join('\n') : undefined,
+      timestamp: new Date().toISOString()
+    })
+    
+    return NextResponse.json({ 
+      error: 'Failed to fetch role weights',
+      details: error instanceof Error ? error.message : String(error),
+      requestId
+    }, { status: 500 })
   }
 }
 
 export async function POST(request: NextRequest) {
+  const requestId = Math.random().toString(36).substring(7)
+  console.log(`🌐 [${requestId}] POST /api/role-weights - Request started`)
+  
   try {
     const body = await request.json()
+    console.log(`📝 [${requestId}] Request body:`, { ...body, requestId })
+    
     const { 
       name,
       inputWeight,
@@ -30,7 +68,8 @@ export async function POST(request: NextRequest) {
 
     if (!name || inputWeight === undefined || outputWeight === undefined || 
         outcomeWeight === undefined || impactWeight === undefined) {
-      return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
+      console.log(`❌ [${requestId}] Validation failed: Missing fields`)
+      return NextResponse.json({ error: 'All fields are required', requestId }, { status: 400 })
     }
 
     // Validate weights sum to 1.0
@@ -38,17 +77,20 @@ export async function POST(request: NextRequest) {
                        parseFloat(outcomeWeight) + parseFloat(impactWeight)
     
     if (Math.abs(totalWeight - 1.0) > 0.001) {
-      return NextResponse.json({ error: 'Weights must sum to 1.0' }, { status: 400 })
+      console.log(`❌ [${requestId}] Validation failed: Weights sum to ${totalWeight}, not 1.0`)
+      return NextResponse.json({ error: 'Weights must sum to 1.0', requestId }, { status: 400 })
     }
 
     // Deactivate other weights if this one is active
     if (isActive) {
+      console.log(`📝 [${requestId}] Deactivating other role weights...`)
       await prisma.roleWeights.updateMany({
         where: { isActive: true },
         data: { isActive: false }
       })
     }
 
+    console.log(`📝 [${requestId}] Creating new role weights...`)
     const weights = await prisma.roleWeights.create({
       data: {
         name,
@@ -60,11 +102,18 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    console.log(`✅ [${requestId}] Role weights created successfully:`, weights.id)
     return NextResponse.json(weights)
   } catch (error: any) {
+    console.error(`❌ [${requestId}] Error in POST /api/role-weights:`, error)
+    
     if (error.code === 'P2002') {
-      return NextResponse.json({ error: 'Role name already exists' }, { status: 400 })
+      return NextResponse.json({ error: 'Role name already exists', requestId }, { status: 400 })
     }
-    return NextResponse.json({ error: 'Failed to create role weights' }, { status: 500 })
+    return NextResponse.json({ 
+      error: 'Failed to create role weights',
+      details: error instanceof Error ? error.message : String(error),
+      requestId
+    }, { status: 500 })
   }
 } 
