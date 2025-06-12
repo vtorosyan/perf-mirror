@@ -200,21 +200,36 @@ export default function WeeklyLog() {
   const calculateTotalScore = (): number => {
     return logEntries.reduce((total, entry) => {
       const category = categories.find(cat => cat.id === entry.categoryId)
-      const score = entry.overrideScore ?? (entry.count * (category?.scorePerOccurrence || 0))
-      return total + score
+      if (!category) return total
+      
+      const safeCount = Number(safeValue(entry.count)) || 0
+      const safeScorePerOccurrence = Number(safeValue(category.scorePerOccurrence)) || 0
+      const safeOverrideScore = entry.overrideScore !== undefined ? Number(safeValue(entry.overrideScore)) : undefined
+      
+      const score = safeOverrideScore ?? (safeCount * safeScorePerOccurrence)
+      return total + (Number(score) || 0)
     }, 0)
   }
 
   const getDimensionScores = (): DimensionScore => {
     const tempLogs = logEntries.map(entry => {
       const category = categories.find(cat => cat.id === entry.categoryId)
+      if (!category) return null
+      
+      // Ensure all category properties are safe values
       return {
         ...entry,
-        category,
+        category: {
+          ...category,
+          scorePerOccurrence: Number(safeValue(category.scorePerOccurrence)) || 0,
+          dimension: safeValue(category.dimension) as string,
+          name: safeValue(category.name) as string,
+          id: safeValue(category.id) as string
+        },
         overrideScore: entry.overrideScore,
-        count: entry.count
+        count: Number(safeValue(entry.count)) || 0
       }
-    }).filter(log => log.category)
+    }).filter(log => log !== null)
     
     return calculateDimensionScores(tempLogs)
   }
@@ -337,7 +352,7 @@ export default function WeeklyLog() {
                   dimension === 'output' ? 'text-green-600' :
                   dimension === 'outcome' ? 'text-purple-600' : 'text-orange-600'
                 }`}>
-                  {score}
+                  {Number(safeValue(score)) || 0}
                 </div>
                 <div className="text-sm text-gray-600">{getDimensionLabel(dimension)}</div>
                 <div className="text-xs text-gray-500">
@@ -369,8 +384,10 @@ export default function WeeklyLog() {
                 <div className="divide-y divide-gray-200">
                   {dimensionCategories.map((category) => {
                     const entry = logEntries.find(e => e.categoryId === category.id)
-                    const calculatedScore = (entry?.count || 0) * category.scorePerOccurrence
-                    const finalScore = entry?.overrideScore ?? calculatedScore
+                    const safeCount = Number(safeValue(entry?.count)) || 0
+                    const safeScorePerOccurrence = Number(safeValue(category.scorePerOccurrence)) || 0
+                    const calculatedScore = safeCount * safeScorePerOccurrence
+                    const finalScore = entry?.overrideScore !== undefined ? Number(safeValue(entry.overrideScore)) : calculatedScore
                     
                     return (
                       <div key={category.id} className="p-6 hover:bg-gray-50">
@@ -398,7 +415,7 @@ export default function WeeklyLog() {
                               
                               <input
                                 type="number"
-                                value={entry?.count || 0}
+                                value={Number(safeValue(entry?.count)) || 0}
                                 onChange={(e) => handleCountChange(category.id, parseInt(e.target.value) || 0)}
                                 className="w-20 px-3 py-2 text-center border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 min="0"
@@ -416,7 +433,7 @@ export default function WeeklyLog() {
                               <div className="flex items-center justify-end space-x-2">
                                 <div className="text-right">
                                   <div className={`text-lg font-semibold ${entry?.overrideScore !== undefined ? 'text-orange-600' : 'text-green-600'}`}>
-                                    {finalScore > 0 ? `+${finalScore}` : '0'}
+                                    {finalScore > 0 ? `+${Number(safeValue(finalScore)) || 0}` : '0'}
                                   </div>
                                   <div className="text-sm text-gray-500">
                                     {entry?.overrideScore !== undefined ? 'override' : 'calculated'}
@@ -435,7 +452,7 @@ export default function WeeklyLog() {
                                 <div className="mt-2">
                                   <input
                                     type="number"
-                                    value={entry?.overrideScore ?? calculatedScore}
+                                    value={entry?.overrideScore !== undefined ? Number(safeValue(entry.overrideScore)) : Number(safeValue(calculatedScore))}
                                     onChange={(e) => {
                                       const value = e.target.value
                                       handleScoreOverride(category.id, value ? parseInt(value) : undefined)
