@@ -111,7 +111,7 @@ class TursoHttpClient {
   }
 
   async findManyRoleWeights(): Promise<DatabaseRecord[]> {
-    const sql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights ORDER BY createdAt ASC'
+    const sql = 'SELECT ID as id, NAME as name, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights ORDER BY CREATEDAT ASC'
     
     try {
       console.log('🔍 findManyRoleWeights: Fetching role weights from Turso...')
@@ -128,12 +128,19 @@ class TursoHttpClient {
 
       const { columns, rows } = result.results[0]
       console.log('📊 findManyRoleWeights: Processing', rows.length, 'rows with', columns.length, 'columns')
+      console.log('📊 findManyRoleWeights: Column names:', columns)
       
       const records = rows.map((row, index) => {
         const record: any = {}
         columns.forEach((col, colIndex) => {
           record[col] = row[colIndex]
         })
+        
+        // Convert SQLite boolean back to JS boolean
+        if (record.isActive !== undefined) {
+          record.isActive = record.isActive === 1
+        }
+        
         console.log(`📝 findManyRoleWeights: Record ${index + 1}:`, {
           id: record.id,
           name: record.name,
@@ -151,7 +158,7 @@ class TursoHttpClient {
   }
 
   async findFirstRoleWeights(): Promise<DatabaseRecord | null> {
-    const sql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights ORDER BY createdAt ASC LIMIT 1'
+    const sql = 'SELECT ID as id, NAME as name, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights ORDER BY CREATEDAT ASC LIMIT 1'
     
     try {
       console.log('🔍 findFirstRoleWeights: Fetching first role weight from Turso...')
@@ -174,6 +181,11 @@ class TursoHttpClient {
         record[col] = rows[0][colIndex]
       })
       
+      // Convert SQLite boolean back to JS boolean
+      if (record.isActive !== undefined) {
+        record.isActive = record.isActive === 1
+      }
+      
       console.log('✅ findFirstRoleWeights: First role weight found:', {
         id: record.id,
         name: record.name,
@@ -191,8 +203,8 @@ class TursoHttpClient {
     const id = this.generateId()
     const now = new Date().toISOString()
     
-    // First insert the record
-    const insertSql = `INSERT INTO RoleWeights (id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt) 
+    // First insert the record - using uppercase column names
+    const insertSql = `INSERT INTO RoleWeights (ID, NAME, INPUTWEIGHT, OUTPUTWEIGHT, OUTCOMEWEIGHT, IMPACTWEIGHT, ISACTIVE, CREATEDAT, UPDATEDAT) 
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     
     const insertParams = [
@@ -220,8 +232,8 @@ class TursoHttpClient {
 
       console.log('✅ createRoleWeight: Record inserted, now fetching it back...')
       
-      // Now fetch the created record
-      const selectSql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights WHERE id = ?'
+      // Now fetch the created record - using uppercase column names with aliases
+      const selectSql = 'SELECT ID as id, NAME as name, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights WHERE ID = ?'
       const selectResult = await this.executeQuery(selectSql, [id])
       
       if (selectResult.error) {
@@ -239,7 +251,9 @@ class TursoHttpClient {
       })
       
       // Convert SQLite boolean back to JS boolean
-      record.isActive = record.isActive === 1
+      if (record.isActive !== undefined) {
+        record.isActive = record.isActive === 1
+      }
       
       console.log('✅ createRoleWeight: Role weight created successfully:', {
         id: record.id,
