@@ -48,8 +48,14 @@ export async function GET(request: NextRequest) {
       orderBy: { week: 'desc' }
     })
 
+    // Debug logging for Vercel
+    console.log('🔍 Raw logs from Prisma:', JSON.stringify(logs.slice(0, 2), null, 2))
+    console.log('🔍 First log category:', logs[0]?.category)
+
     // Transform the data to handle Turso's wrapped format
     const transformedLogs = logs.map(transformWeeklyLog).filter(log => log !== null)
+
+    console.log('🔍 Transformed logs:', JSON.stringify(transformedLogs.slice(0, 2), null, 2))
 
     return NextResponse.json(transformedLogs)
   } catch (error) {
