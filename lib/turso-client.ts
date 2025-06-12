@@ -286,7 +286,11 @@ class TursoHttpClient {
       columns.forEach((col, colIndex) => {
         // Handle case where col might be an object with name property
         const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-        record[columnName] = rows[0][colIndex]
+        const cellValue = rows[0][colIndex]
+        // Transform Turso's {type, value} format to simple values
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
       })
       
       // Convert SQLite boolean back to JS boolean
@@ -331,8 +335,18 @@ class TursoHttpClient {
         columns.forEach((col, colIndex) => {
           // Handle case where col might be an object with name property
           const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-          record[columnName] = row[colIndex]
+          const cellValue = row[colIndex]
+          // Transform Turso's {type, value} format to simple values
+          record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+            ? cellValue.value 
+            : cellValue
         })
+        
+        // Convert SQLite boolean back to JS boolean
+        if (record.isActive !== undefined) {
+          record.isActive = record.isActive === '1' || record.isActive === 1
+        }
+        
         console.log(`📝 findManyTargets: Record ${index + 1}:`, {
           id: record.id,
           name: record.name,
@@ -373,7 +387,11 @@ class TursoHttpClient {
         columns.forEach((col, colIndex) => {
           // Handle case where col might be an object with name property
           const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-          record[columnName] = row[colIndex]
+          const cellValue = row[colIndex]
+          // Transform Turso's {type, value} format to simple values
+          record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+            ? cellValue.value 
+            : cellValue
         })
         console.log(`📝 findManyCategories: Record ${index + 1}:`, {
           id: record.id,
@@ -428,7 +446,11 @@ class TursoHttpClient {
         columns.forEach((col, colIndex) => {
           // Handle case where col might be an object with name property
           const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-          record[columnName] = row[colIndex]
+          const cellValue = row[colIndex]
+          // Transform Turso's {type, value} format to simple values
+          record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+            ? cellValue.value 
+            : cellValue
         })
         if (index < 3) { // Log first 3 records for debugging
           console.log(`📝 findManyWeeklyLogs: Record ${index + 1}:`, {
@@ -493,7 +515,11 @@ class TursoHttpClient {
       const record: any = {}
       columns.forEach((col, colIndex) => {
         const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-        record[columnName] = rows[0][colIndex]
+        const cellValue = rows[0][colIndex]
+        // Transform Turso's {type, value} format to simple values
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
       })
       
       console.log('✅ createCategory: Category created successfully:', record.id)
