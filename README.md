@@ -1,34 +1,103 @@
 # PerfMirror - Performance Tracking for Engineers
 
-A web application for tracking engineering performance using a customizable point-based scoring system. Built with Next.js, TypeScript, Tailwind CSS, and SQLite.
+A modern web application for tracking engineering performance using the **IOOI Framework** (Input, Output, Outcome, Impact) with role-based weighted scoring. Built with Next.js 14, TypeScript, and intelligent database switching between local SQLite and cloud Turso.
 
-## Features
+[![Production](https://img.shields.io/badge/Production-Live-brightgreen)](https://perf-mirror-rdbf.vercel.app/)
+[![Local Development](https://img.shields.io/badge/Development-Ready-blue)](#quick-start)
 
-- **Dimension-Based Categories**: Define work categories with IOOI dimensions (Input, Output, Outcome, Impact) and point values
-- **Grouped Weekly Logging**: Log activities organized by dimension with count tracking and score override capability
-- **Role-Based Weighted Scoring**: Apply customizable weights based on your role (Engineer, Manager, Senior Manager, Director, or Custom)
-- **IOOI Breakdown**: View detailed dimension scores showing Input, Output, Outcome, and Impact contributions
-- **Performance Targets**: Set and track against configurable performance thresholds
-- **Enhanced Dashboard**: Interactive charts with weighted scores and dimension breakdowns
-- **Smart Insights**: AI-powered analysis detecting patterns like "High input, low outcome" with actionable recommendations
-- **Score Override**: Manually adjust individual category scores when needed before saving logs
+## 🏗️ Architecture
 
-## Performance Levels
+The application features a hybrid architecture that automatically switches between local SQLite (development) and cloud Turso database (production):
 
-The default target configuration includes:
-- **Excellent**: 225+ points per week
-- **Good**: 170+ points per week  
-- **Needs Improvement**: 120+ points per week
-- **Unsatisfactory**: Below 120 points per week
+```mermaid
+graph TB
+    subgraph "Frontend Layer"
+        UI["Next.js 14 React App<br/>TypeScript + Tailwind CSS"]
+        COMP["React Components<br/>• Dashboard<br/>• Categories<br/>• WeeklyLogs<br/>• Targets<br/>• RoleWeights"]
+    end
+    
+    subgraph "API Layer"
+        API["Next.js API Routes"]
+        ROUTES["API Endpoints<br/>• /api/categories<br/>• /api/weekly-logs<br/>• /api/targets<br/>• /api/role-weights"]
+    end
+    
+    subgraph "Data Layer"
+        PRISMA["Hybrid Prisma Client<br/>Smart Database Switching"]
+        TURSO["Turso HTTP Client<br/>Production Cloud DB"]
+        SQLITE["SQLite Local<br/>Development DB"]
+    end
+    
+    subgraph "Core Logic"
+        CALC["Score Calculation Engine<br/>• Weighted Scoring<br/>• IOOI Framework<br/>• Performance Insights"]
+        UTILS["Utility Functions<br/>• Date Handling<br/>• Validation<br/>• Formatting"]
+    end
+    
+    subgraph "Database Schema"
+        CAT["Category<br/>• name<br/>• dimension (IOOI)<br/>• scorePerOccurrence"]
+        WL["WeeklyLog<br/>• week<br/>• categoryId<br/>• count<br/>• overrideScore"]
+        PT["PerformanceTarget<br/>• thresholds<br/>• timePeriodWeeks<br/>• isActive"]
+        RW["RoleWeights<br/>• inputWeight<br/>• outputWeight<br/>• outcomeWeight<br/>• impactWeight"]
+    end
+    
+    subgraph "IOOI Framework"
+        INPUT["Input (I)<br/>Activities you consume<br/>• Code Reviews<br/>• Meetings<br/>• Training"]
+        OUTPUT["Output (O)<br/>Work you produce<br/>• Features<br/>• Bug Fixes<br/>• Documentation"]
+        OUTCOME["Outcome (O)<br/>Results you achieve<br/>• Designs<br/>• Proposals<br/>• Decisions"]
+        IMPACT["Impact (I)<br/>Influence you create<br/>• Mentoring<br/>• Hiring<br/>• Culture"]
+    end
+    
+    subgraph "Environment"
+        DEV["Development<br/>SQLite + Prisma"]
+        PROD["Production<br/>Turso + Vercel"]
+    end
+    
+    UI --> API
+    COMP --> UI
+    API --> ROUTES
+    ROUTES --> PRISMA
+    PRISMA --> TURSO
+    PRISMA --> SQLITE
+    ROUTES --> CALC
+    CALC --> UTILS
+    
+    PRISMA --> CAT
+    PRISMA --> WL  
+    PRISMA --> PT
+    PRISMA --> RW
+    
+    CALC --> INPUT
+    CALC --> OUTPUT
+    CALC --> OUTCOME
+    CALC --> IMPACT
+    
+    DEV --> SQLITE
+    PROD --> TURSO
+    
+    style UI fill:#e1f5fe
+    style API fill:#f3e5f5
+    style PRISMA fill:#e8f5e8
+    style CALC fill:#fff3e0
+    style INPUT fill:#ffebee
+    style OUTPUT fill:#e3f2fd
+    style OUTCOME fill:#f1f8e9
+    style IMPACT fill:#fce4ec
+```
 
-## Quick Start
+## ✨ Key Features
+
+- **📊 IOOI Framework**: Structured performance tracking across Input, Output, Outcome, and Impact dimensions
+- **⚖️ Role-Based Scoring**: Customizable weights for Engineer, Manager, Senior Manager, Director roles
+- **📈 Smart Insights**: AI-powered pattern detection with actionable recommendations
+- **🎯 Performance Targets**: Configurable thresholds with visual progress tracking
+- **📱 Modern UI**: Responsive design with interactive charts and real-time calculations
+- **🔄 Hybrid Database**: Seamless switching between SQLite (local) and Turso (production)
+- **🚀 Production Ready**: Deployed on Vercel with automatic builds and health monitoring
+
+## 🚀 Quick Start
 
 ### Option 1: Using Make (Recommended)
 
 ```bash
-# See all available commands
-make help
-
 # Complete setup and start development
 make setup
 make dev
@@ -39,389 +108,97 @@ make quick-start
 
 ### Option 2: Manual Setup
 
-1. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-2. **Set up the database**:
-   ```bash
-   npm run db:push
-   ```
-
-3. **Start the development server**:
-   ```bash
-   npm run dev
-   ```
-
-4. **Open the application**:
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## Docker Deployment
-
-For easy sharing and deployment, you can run PerfMirror using Docker:
-
-### Option 1: Docker Compose (Recommended)
-
-1. **Quick deployment**:
-   ```bash
-   # Build and start the application
-   docker-compose up --build -d
-   
-   # View logs
-   docker-compose logs -f
-   
-   # Stop the application
-   docker-compose down
-   ```
-
-2. **Using the deployment script**:
-   ```bash
-   ./scripts/docker-deploy.sh
-   ```
-
-### Option 2: Docker Build and Run
-
-1. **Build the Docker image**:
-   ```bash
-   docker build -t perf-mirror:latest .
-   ```
-
-2. **Run the container**:
-   ```bash
-   docker run -p 3000:3000 -v perf_mirror_data:/app/prisma perf-mirror:latest
-   ```
-
-3. **Using the build script**:
-   ```bash
-   ./scripts/docker-build.sh
-   ```
-
-### Development with Docker
-
-For development with hot reload:
-
 ```bash
-# Start development environment
-docker-compose -f docker-compose.dev.yml up --build
+# Install dependencies
+npm install
 
-# Stop development environment
-docker-compose -f docker-compose.dev.yml down
+# Set up database
+npm run db:push
+
+# Start development server
+npm run dev
+
+# Open application
+open http://localhost:3000
 ```
 
-### Docker Features
+## 🎯 Performance Levels
 
-- **Automatic Database Setup**: The container automatically initializes the SQLite database on first run
-- **Data Persistence**: Database data is persisted using Docker volumes
-- **Health Checks**: Built-in health monitoring for the application
-- **Production Optimized**: Multi-stage build for minimal image size
-- **Easy Sharing**: Share the built image or docker-compose files with your team
+| Level | Weekly Points | Description |
+|-------|---------------|-------------|
+| **🌟 Excellent** | 225+ | Exceeding expectations across all dimensions |
+| **✅ Good** | 170+ | Meeting expectations with solid performance |
+| **⚠️ Needs Improvement** | 120+ | Below expectations, requires attention |
+| **❌ Unsatisfactory** | <120 | Significant performance concerns |
 
-### Environment Variables
+## 📚 Documentation
 
-The following environment variables can be configured:
+### Core Documentation
+- **[Performance Logic](docs/PERFORMANCE_LOGIC.md)** - Understanding the IOOI framework and scoring system
+- **[Getting Started Guide](docs/GETTING_STARTED.md)** - Step-by-step setup and first-time usage
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API endpoints documentation
+- **[Database Schema](docs/DATABASE_SCHEMA.md)** - Data models and relationships
 
-```bash
-# Database URL (default for SQLite)
-DATABASE_URL="file:./dev.db"
+### Development & Deployment
+- **[Development Guide](docs/DEVELOPMENT.md)** - Local development setup and workflows  
+- **[Docker Deployment](docs/DOCKER.md)** - Containerization and deployment options
+- **[Production Setup](docs/PRODUCTION.md)** - Production deployment and monitoring
+- **[Troubleshooting](docs/TROUBLESHOOTING.md)** - Common issues and solutions
 
-# Node Environment
-NODE_ENV="production"
+### Advanced Topics
+- **[Customization Guide](docs/CUSTOMIZATION.md)** - Adapting the system for your team
+- **[Architecture Deep Dive](docs/ARCHITECTURE.md)** - Technical implementation details
+- **[Contributing](docs/CONTRIBUTING.md)** - Development practices and contribution guidelines
 
-# Disable Next.js telemetry (optional)
-NEXT_TELEMETRY_DISABLED=1
+## 🛠️ Technology Stack
 
-# Port (optional, defaults to 3000)
-PORT=3000
+| Category | Technology | Purpose |
+|----------|------------|---------|
+| **Frontend** | Next.js 14, React, TypeScript | Modern React framework with type safety |
+| **Styling** | Tailwind CSS | Utility-first CSS framework |
+| **Database** | SQLite + Turso | Local development + cloud production |
+| **ORM** | Prisma | Type-safe database access |
+| **Charts** | Recharts | Interactive data visualization |
+| **Deployment** | Vercel | Serverless hosting with automatic builds |
+
+## 📊 Quick Example
+
+```typescript
+// Weekly performance calculation
+const weeklyScore = calculateWeightedScore({
+  input: 45,      // Code reviews, meetings
+  output: 85,     // Features, bug fixes  
+  outcome: 60,    // Design docs, proposals
+  impact: 30      // Mentoring, hiring
+}, roleWeights.manager); // 20%, 40%, 30%, 10%
+
+// Result: 67.5 weighted points
 ```
 
-### Accessing the Application
+## 🔗 Related Resources
 
-Once running with Docker, the application will be available at:
-- **Application**: http://localhost:3000
-- **Health Check**: http://localhost:3000/api/categories
+### Blog Posts & Methodology
+- **[The IOOI Framework Explained](https://blog.vardan.dev/iooi-framework)** - Deep dive into Input, Output, Outcome, Impact methodology
+- **[Engineering Performance Metrics That Matter](https://blog.vardan.dev/performance-metrics)** - Why traditional metrics fall short
+- **[Building a Data-Driven Performance Culture](https://blog.vardan.dev/performance-culture)** - Implementation strategies for teams
 
-### Data Persistence
+### Open Source & Community
+- **[GitHub Repository](https://github.com/yourusername/perf-mirror)** - Source code and issue tracking
+- **[Discussions](https://github.com/yourusername/perf-mirror/discussions)** - Community questions and ideas
+- **[Roadmap](https://github.com/yourusername/perf-mirror/projects)** - Planned features and improvements
 
-Your performance tracking data is automatically persisted:
+## 🤝 Contributing
 
-**Docker Deployment:**
-- Database data is stored in a Docker volume (`perf_mirror_data`)
-- Data survives container restarts and updates
-- Volume persists until explicitly removed
+We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for:
+- Development setup
+- Coding standards  
+- Pull request process
+- Issue reporting
 
-**Local Development:**
-- Database stored as `prisma/dev.db` file
-- Automatically backed up during migrations
+## 📄 License
 
-### Troubleshooting
+MIT License - see [LICENSE](LICENSE) for details.
 
-**Common Issues:**
+---
 
-- **Docker Check**: Run `./scripts/check-docker.sh` to verify your Docker setup
-- **View Logs**: Use `docker-compose logs -f` to see application logs  
-- **Reset Database**: Stop the container and remove the volume: `docker-compose down && docker volume rm perf-mirror_perf_mirror_data`
-- **Check Status**: Run `make status` to see current application state
-
-**Docker-Specific Troubleshooting:**
-
-- **Prisma Engine Issues**: If you see OpenSSL compatibility errors, the Dockerfile has been updated to include OpenSSL libraries for Alpine Linux. Rebuild the image with `make docker-build`
-- **Binary Target Errors**: The Prisma schema includes binary targets for Alpine Linux (`linux-musl-openssl-3.0.x`). This fixes "engine not compatible" errors
-- **Container Unhealthy**: If the container shows as unhealthy, check logs with `docker-compose logs` for Prisma client generation issues
-- **Database Initialization**: The container automatically sets up the database on first run. If this fails, remove the volume and restart: `docker volume rm perf-mirror_perf_mirror_data && make docker-deploy`
-- **Port Conflicts**: If port 3000 is busy, modify the `docker-compose.yml` ports mapping (e.g., `"3001:3000"`)
-
-**Development Mode Issues:**
-
-- **CSS Compilation Errors**: If you see `border-border` class errors, clear the build cache: `rm -rf .next && npm run dev`
-- **Prisma Client Errors**: Regenerate the client: `npx prisma generate && npm run dev`
-- **Database Connection**: Ensure the database exists: `npx prisma db push`
-
-## Getting Started Guide
-
-### 1. Create Work Categories
-
-Start by defining your work categories in the **Categories** tab with IOOI dimensions:
-
-**Input Activities:**
-- **Code Reviews** (5 points each, Input)
-- **Meeting Participation** (3 points each, Input)
-
-**Output Activities:**
-- **Feature Development** (10 points each, Output)
-- **Bug Fixes** (3 points each, Output)
-
-**Outcome Activities:**
-- **Design Documents** (25 points each, Outcome)
-- **Technical Proposals** (20 points each, Outcome)
-
-**Impact Activities:**
-- **Hiring Interviews** (15 points each, Impact)
-- **Mentoring Sessions** (12 points each, Impact)
-
-### 2. Configure Role Weights
-
-Go to the **Role Weights** tab to set up dimension weights:
-
-- **Engineer**: Input 30%, Output 40%, Outcome 20%, Impact 10%
-- **Manager**: Input 20%, Output 40%, Outcome 30%, Impact 10%
-- **Senior Manager**: Input 15%, Output 35%, Outcome 35%, Impact 15%
-- **Director**: Input 10%, Output 25%, Outcome 40%, Impact 25%
-- **Custom**: Define your own weights that sum to 100%
-
-### 3. Set Performance Targets
-
-Go to the **Targets** tab and create a performance target:
-
-- Set your thresholds for different performance levels
-- Activate your target to start getting insights
-- Adjust time periods as needed (default: 12 weeks)
-
-### 4. Log Weekly Activities
-
-Use the **Log Work** tab to track your weekly activities:
-
-- Select the week you want to log
-- Activities are grouped by dimension (Input, Output, Outcome, Impact)
-- Enter counts for each activity
-- Override individual scores if needed (e.g., for exceptional work)
-- View real-time IOOI breakdown and weighted score
-- Save to update your performance data
-
-### 5. Monitor Your Performance
-
-The **Dashboard** provides:
-
-- **Current Week Summary**: Raw and weighted scores with performance level
-- **IOOI Breakdown**: Detailed view of Input, Output, Outcome, and Impact scores
-- **Smart Insights**: AI-powered pattern detection and recommendations
-- **Trend Charts**: Visual representation of performance over time
-- **Recent Activity**: Activity log with override indicators
-
-## Technology Stack
-
-- **Frontend**: Next.js 14, React, TypeScript
-- **Styling**: Tailwind CSS
-- **Database**: SQLite with Prisma ORM
-- **Charts**: Recharts
-- **Icons**: Lucide React
-
-## Project Structure
-
-```
-├── app/
-│   ├── api/          # API routes
-│   ├── globals.css   # Global styles
-│   ├── layout.tsx    # Root layout
-│   └── page.tsx      # Main application
-├── components/       # React components
-├── lib/             # Utility functions
-├── prisma/          # Database schema
-└── README.md        # This file
-```
-
-## API Endpoints
-
-### Categories
-- `GET /api/categories` - List all categories
-- `POST /api/categories` - Create new category
-- `PUT /api/categories/[id]` - Update category
-- `DELETE /api/categories/[id]` - Delete category
-
-### Weekly Logs
-- `GET /api/weekly-logs?weeks=2024-W01,2024-W02` - Get logs for specific weeks
-- `POST /api/weekly-logs` - Create/update weekly log
-
-### Performance Targets
-- `GET /api/targets` - List all targets
-- `POST /api/targets` - Create new target
-- `PUT /api/targets/[id]` - Update target
-- `DELETE /api/targets/[id]` - Delete target
-
-### Role Weights
-- `GET /api/role-weights` - List all role weights
-- `POST /api/role-weights` - Create new role weights
-- `PUT /api/role-weights/[id]` - Update role weights
-- `DELETE /api/role-weights/[id]` - Delete role weights
-- `POST /api/role-weights/init` - Initialize default role weights
-
-## Database Schema
-
-The application uses four main models:
-
-- **Category**: Work categories with names, dimensions (IOOI), and point values
-- **WeeklyLog**: Weekly activity counts with optional score overrides for each category
-- **PerformanceTarget**: Configurable performance thresholds for different levels
-- **RoleWeights**: Dimension weights configuration for different roles (Engineer, Manager, Senior Manager, Director)
-
-## Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run db:push` - Push database schema changes
-- `npm run db:studio` - Open Prisma Studio (database GUI)
-
-## Makefile Commands
-
-This project includes a comprehensive Makefile for easy development and deployment:
-
-### Quick Commands
-```bash
-make help          # Show all available commands
-make setup         # Complete setup (install + db + dev)
-make quick-start   # Quick start with Docker
-make status        # Show application status
-```
-
-### Development
-```bash
-make install       # Install dependencies
-make dev           # Start development server
-make build         # Build for production
-make start         # Start production server
-make lint          # Run linter
-make clean         # Clean build artifacts
-```
-
-### Docker Operations
-```bash
-make check-docker    # Check Docker setup
-make docker-build    # Build Docker image  
-make docker-deploy   # Deploy with Docker Compose
-make docker-dev      # Start development with Docker
-make docker-stop     # Stop containers
-make docker-logs     # View container logs
-make docker-clean    # Clean Docker resources
-make docker-restart  # Restart containers
-```
-
-### Database Management
-```bash
-make db-push       # Push schema changes
-make db-studio     # Open Prisma Studio
-make db-generate   # Generate Prisma client
-make db-reset      # Reset database (WARNING: deletes data)
-```
-
-### Data Backup & Restore
-```bash
-make backup-data         # Backup local database
-make backup-docker-data  # Backup Docker volume
-make restore-data BACKUP_FILE=filename  # Restore from backup
-```
-
-### Monitoring & Health
-```bash
-make health-check  # Check application health
-make watch-logs    # Watch logs in real-time
-make debug-db      # Show database contents
-make version       # Show tool versions
-```
-
-### Utility Commands
-```bash
-make export-image    # Export Docker image for sharing
-make share-setup     # Create setup package for colleagues
-make update-deps     # Update all dependencies
-make reset-all       # Reset everything (DANGEROUS)
-```
-
-### Data Migration & Backup Utility
-
-For advanced backup and restore operations, use the dedicated script:
-
-```bash
-# Backup operations
-./scripts/backup-restore.sh backup-local     # Backup local database
-./scripts/backup-restore.sh backup-docker    # Backup Docker volume
-./scripts/backup-restore.sh list-backups     # List all backups
-
-# Restore operations  
-./scripts/backup-restore.sh restore-local --file backup-local-20241211_143000.db
-./scripts/backup-restore.sh restore-docker --file backups/perf-mirror-docker-20241211_143000.tar.gz
-
-# Data migration
-./scripts/backup-restore.sh migrate-data     # Interactive migration tool
-```
-
-## Customization
-
-### Adding New Categories
-
-Categories can represent any measurable work activity:
-- Code commits
-- Pull requests reviewed
-- Meetings attended
-- Documentation written
-- Bugs resolved
-
-### Adjusting Point Values
-
-Point values should reflect the relative importance and effort of activities:
-- Simple tasks: 1-5 points
-- Medium complexity: 6-15 points
-- High-impact work: 16+ points
-
-### Setting Targets
-
-Consider your role and expectations when setting targets:
-- **Individual Contributors**: Focus on coding and technical activities
-- **Tech Leads**: Balance coding with mentoring and reviews
-- **Engineering Managers**: Emphasize people management and strategic work
-
-## Tips for Success
-
-1. **Be Consistent**: Log your activities regularly for accurate tracking
-2. **Set Realistic Targets**: Base thresholds on historical performance
-3. **Review Regularly**: Check your dashboard weekly to stay on track
-4. **Adjust as Needed**: Update categories and targets as your role evolves
-5. **Use Insights**: Pay attention to the personalized recommendations
-
-## Contributing
-
-This application is designed to be easily customizable for different teams and organizations. Feel free to modify the categories, scoring system, and targets to match your specific needs.
-
-## License
-
-MIT License - feel free to use and modify for your team's needs. 
+**Built with ❤️ for engineering teams who believe in data-driven performance tracking.** 
