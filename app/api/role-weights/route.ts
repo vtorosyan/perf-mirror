@@ -4,6 +4,33 @@ import { prisma } from '@/lib/prisma'
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
+// Helper function to safely extract values from Turso's wrapped format
+const safeValue = (value: any): any => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'object' && value && 'type' in value) {
+    if (value.type === 'null') return null
+    if (value.type === 'text' || value.type === 'integer') return value.value
+  }
+  return value
+}
+
+// Transform role weights data from Turso format to normal format
+const transformRoleWeights = (rawWeights: any): any => {
+  if (!rawWeights) return null
+  
+  return {
+    id: safeValue(rawWeights.id),
+    name: safeValue(rawWeights.name),
+    inputWeight: parseFloat(safeValue(rawWeights.inputWeight)) || 0,
+    outputWeight: parseFloat(safeValue(rawWeights.outputWeight)) || 0,
+    outcomeWeight: parseFloat(safeValue(rawWeights.outcomeWeight)) || 0,
+    impactWeight: parseFloat(safeValue(rawWeights.impactWeight)) || 0,
+    isActive: safeValue(rawWeights.isActive) === 'true' || safeValue(rawWeights.isActive) === true,
+    createdAt: safeValue(rawWeights.createdAt),
+    updatedAt: safeValue(rawWeights.updatedAt)
+  }
+}
+
 export async function GET() {
   const requestId = Math.random().toString(36).substring(7)
   console.log(`🌐 [${requestId}] GET /api/role-weights - Request started`)
@@ -31,7 +58,10 @@ export async function GET() {
       isActive: weights[0].isActive
     } : 'No records found')
     
-    return NextResponse.json(weights)
+    // Transform the data to handle Turso's wrapped format
+    const transformedWeights = weights.map(transformRoleWeights).filter(weight => weight !== null)
+    
+    return NextResponse.json(transformedWeights)
   } catch (error) {
     console.error(`❌ [${requestId}] Error in GET /api/role-weights:`, error)
     console.error(`❌ [${requestId}] Error details:`, {

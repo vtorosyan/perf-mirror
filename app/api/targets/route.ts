@@ -4,12 +4,43 @@ import { prisma } from '@/lib/prisma'
 // Force dynamic rendering
 export const dynamic = 'force-dynamic'
 
+// Helper function to safely extract values from Turso's wrapped format
+const safeValue = (value: any): any => {
+  if (value === null || value === undefined) return null
+  if (typeof value === 'object' && value && 'type' in value) {
+    if (value.type === 'null') return null
+    if (value.type === 'text' || value.type === 'integer') return value.value
+  }
+  return value
+}
+
+// Transform target data from Turso format to normal format
+const transformTarget = (rawTarget: any): any => {
+  if (!rawTarget) return null
+  
+  return {
+    id: safeValue(rawTarget.id),
+    name: safeValue(rawTarget.name),
+    excellentThreshold: parseInt(safeValue(rawTarget.excellentThreshold)) || 0,
+    goodThreshold: parseInt(safeValue(rawTarget.goodThreshold)) || 0,
+    needsImprovementThreshold: parseInt(safeValue(rawTarget.needsImprovementThreshold)) || 0,
+    timePeriodWeeks: parseInt(safeValue(rawTarget.timePeriodWeeks)) || 0,
+    isActive: safeValue(rawTarget.isActive) === 'true' || safeValue(rawTarget.isActive) === true,
+    createdAt: safeValue(rawTarget.createdAt),
+    updatedAt: safeValue(rawTarget.updatedAt)
+  }
+}
+
 export async function GET() {
   try {
     const targets = await prisma.performanceTarget.findMany({
       orderBy: { createdAt: 'desc' }
     })
-    return NextResponse.json(targets)
+    
+    // Transform the data to handle Turso's wrapped format
+    const transformedTargets = targets.map(transformTarget).filter(target => target !== null)
+    
+    return NextResponse.json(transformedTargets)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch targets' }, { status: 500 })
   }
@@ -46,7 +77,10 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(target)
+    // Transform the response data
+    const transformedTarget = transformTarget(target)
+
+    return NextResponse.json(transformedTarget)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create target' }, { status: 500 })
   }
