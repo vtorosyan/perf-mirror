@@ -68,8 +68,21 @@ export default function WeeklyLog() {
       setCategories(categoriesData)
       
       // Find active role weights
+      console.log('📊 WeeklyLog: Role weights data:', weightsData)
       const activeWeights = weightsData.find((weight: any) => weight.isActive)
-      setRoleWeights(activeWeights || null)
+      if (activeWeights) {
+        // Validate weight values
+        const validatedWeights = {
+          ...activeWeights,
+          inputWeight: typeof activeWeights.inputWeight === 'number' ? activeWeights.inputWeight : 0,
+          outputWeight: typeof activeWeights.outputWeight === 'number' ? activeWeights.outputWeight : 0,
+          outcomeWeight: typeof activeWeights.outcomeWeight === 'number' ? activeWeights.outcomeWeight : 0,
+          impactWeight: typeof activeWeights.impactWeight === 'number' ? activeWeights.impactWeight : 0,
+        }
+        setRoleWeights(validatedWeights)
+      } else {
+        setRoleWeights(null)
+      }
       
       // Initialize log entries
       const initialEntries = categoriesData.map((category: Category) => ({
@@ -306,7 +319,7 @@ export default function WeeklyLog() {
                 </div>
                 <div className="text-sm text-gray-600">{getDimensionLabel(dimension)}</div>
                 <div className="text-xs text-gray-500">
-                  {(roleWeights[`${dimension}Weight` as keyof RoleWeights] as number * 100).toFixed(0)}% weight
+                  {((roleWeights[`${dimension}Weight` as keyof RoleWeights] as number || 0) * 100).toFixed(0)}% weight
                 </div>
               </div>
             ))}

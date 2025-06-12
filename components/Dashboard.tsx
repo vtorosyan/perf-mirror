@@ -71,8 +71,21 @@ export default function Dashboard() {
       setTargets(targetsData)
       
       // Find active role weights
+      console.log('📊 Dashboard: Role weights data:', weightsData)
       const activeWeights = weightsData.find((weight: any) => weight.isActive)
-      setRoleWeights(activeWeights || null)
+      if (activeWeights) {
+        // Validate weight values
+        const validatedWeights = {
+          ...activeWeights,
+          inputWeight: typeof activeWeights.inputWeight === 'number' ? activeWeights.inputWeight : 0,
+          outputWeight: typeof activeWeights.outputWeight === 'number' ? activeWeights.outputWeight : 0,
+          outcomeWeight: typeof activeWeights.outcomeWeight === 'number' ? activeWeights.outcomeWeight : 0,
+          impactWeight: typeof activeWeights.impactWeight === 'number' ? activeWeights.impactWeight : 0,
+        }
+        setRoleWeights(validatedWeights)
+      } else {
+        setRoleWeights(null)
+      }
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -251,7 +264,7 @@ export default function Dashboard() {
                 </div>
                 <div className="text-sm font-medium text-gray-900">{getDimensionLabel(dimension)}</div>
                 <div className="text-xs text-gray-500 mt-1">
-                  {(roleWeights[`${dimension}Weight` as keyof RoleWeights] as number * 100).toFixed(0)}% weight
+                  {((roleWeights[`${dimension}Weight` as keyof RoleWeights] as number || 0) * 100).toFixed(0)}% weight
                 </div>
               </div>
             ))}
