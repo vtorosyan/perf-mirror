@@ -216,6 +216,42 @@ const createHybridClient = () => {
           throw error
         }
       },
+      update: async (options: { where: { id: string }; data: any }) => {
+        console.log('📞 Hybrid client: performanceTarget.update() called with Turso')
+        console.log('📝 Update options:', options)
+        try {
+          const result = await tursoClient.updateTarget(options.where.id, options.data)
+          console.log('✅ Hybrid client: performanceTarget.update() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: performanceTarget.update() failed:', error)
+          throw error
+        }
+      },
+      updateMany: async (options: { where: any; data: any }) => {
+        console.log('📞 Hybrid client: performanceTarget.updateMany() called with Turso')
+        console.log('📝 UpdateMany options:', options)
+        try {
+          const result = await tursoClient.updateManyTargets(options.where, options.data)
+          console.log('✅ Hybrid client: performanceTarget.updateMany() successful:', result.count)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: performanceTarget.updateMany() failed:', error)
+          throw error
+        }
+      },
+      delete: async (options: { where: { id: string } }) => {
+        console.log('📞 Hybrid client: performanceTarget.delete() called with Turso')
+        console.log('📝 Delete target ID:', options.where.id)
+        try {
+          await tursoClient.deleteTarget(options.where.id)
+          console.log('✅ Hybrid client: performanceTarget.delete() successful')
+          return { id: options.where.id }
+        } catch (error) {
+          console.error('❌ Hybrid client: performanceTarget.delete() failed:', error)
+          throw error
+        }
+      },
     }
     
     hybridClient.category = {
@@ -235,6 +271,30 @@ const createHybridClient = () => {
           throw error
         }
       },
+      update: async (options: { where: { id: string }; data: any }) => {
+        console.log('📞 Hybrid client: category.update() called with Turso')
+        console.log('📝 Update options:', options)
+        try {
+          const result = await tursoClient.updateCategory(options.where.id, options.data)
+          console.log('✅ Hybrid client: category.update() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: category.update() failed:', error)
+          throw error
+        }
+      },
+      delete: async (options: { where: { id: string } }) => {
+        console.log('📞 Hybrid client: category.delete() called with Turso')
+        console.log('📝 Delete category ID:', options.where.id)
+        try {
+          await tursoClient.deleteCategory(options.where.id)
+          console.log('✅ Hybrid client: category.delete() successful')
+          return { id: options.where.id }
+        } catch (error) {
+          console.error('❌ Hybrid client: category.delete() failed:', error)
+          throw error
+        }
+      },
     }
     
     hybridClient.weeklyLog = {
@@ -242,6 +302,31 @@ const createHybridClient = () => {
         console.log('📞 Hybrid client: weeklyLog.findMany() called with Turso')
         const weeks = options?.where?.week?.in
         return await tursoClient.findManyWeeklyLogs(weeks)
+      },
+      upsert: async (options: { 
+        where: { categoryId_week: { categoryId: string; week: string } };
+        update: any;
+        create: any;
+        include?: any;
+      }) => {
+        console.log('📞 Hybrid client: weeklyLog.upsert() called with Turso')
+        console.log('📝 Upsert options:', options)
+        try {
+          const data = {
+            categoryId: options.where.categoryId_week.categoryId,
+            week: options.where.categoryId_week.week,
+            count: options.update.count || options.create.count,
+            overrideScore: options.update.overrideScore !== undefined 
+              ? options.update.overrideScore 
+              : options.create.overrideScore
+          }
+          const result = await tursoClient.upsertWeeklyLog(data)
+          console.log('✅ Hybrid client: weeklyLog.upsert() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: weeklyLog.upsert() failed:', error)
+          throw error
+        }
       },
     }
     

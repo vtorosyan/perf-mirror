@@ -595,6 +595,42 @@ class TursoHttpClient {
     }
   }
 
+  async deleteCategory(id: string): Promise<void> {
+    console.log('🗑️ deleteCategory: Deleting category with ID:', id)
+    
+    try {
+      const deleteSql = 'DELETE FROM Category WHERE id = ?'
+      const result = await this.executeQuery(deleteSql, [id])
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      console.log('✅ deleteCategory: Category deleted successfully')
+    } catch (error) {
+      console.error('❌ deleteCategory: Error deleting category from Turso:', error)
+      throw error
+    }
+  }
+
+  async deleteTarget(id: string): Promise<void> {
+    console.log('🗑️ deleteTarget: Deleting target with ID:', id)
+    
+    try {
+      const deleteSql = 'DELETE FROM PerformanceTarget WHERE id = ?'
+      const result = await this.executeQuery(deleteSql, [id])
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      console.log('✅ deleteTarget: Target deleted successfully')
+    } catch (error) {
+      console.error('❌ deleteTarget: Error deleting target from Turso:', error)
+      throw error
+    }
+  }
+
   async updateManyRoleWeights(where: any, data: any): Promise<{ count: number }> {
     console.log('🔄 updateManyRoleWeights: Starting bulk update')
     console.log('📝 updateManyRoleWeights: Where:', where, 'Data:', data)
@@ -743,6 +779,276 @@ class TursoHttpClient {
       return record as DatabaseRecord
     } catch (error) {
       console.error('❌ updateRoleWeight: Error updating role weight in Turso:', error)
+      throw error
+    }
+  }
+
+  async updateTarget(id: string, data: any): Promise<any> {
+    console.log('🔄 updateTarget: Starting update for ID:', id)
+    console.log('📝 updateTarget: Data:', data)
+    
+    try {
+      const setClauses: string[] = []
+      const params: any[] = []
+      
+      if (data.name !== undefined) {
+        setClauses.push('name = ?')
+        params.push(data.name)
+      }
+      if (data.excellentThreshold !== undefined) {
+        setClauses.push('excellentThreshold = ?')
+        params.push(data.excellentThreshold)
+      }
+      if (data.goodThreshold !== undefined) {
+        setClauses.push('goodThreshold = ?')
+        params.push(data.goodThreshold)
+      }
+      if (data.needsImprovementThreshold !== undefined) {
+        setClauses.push('needsImprovementThreshold = ?')
+        params.push(data.needsImprovementThreshold)
+      }
+      if (data.timePeriodWeeks !== undefined) {
+        setClauses.push('timePeriodWeeks = ?')
+        params.push(data.timePeriodWeeks)
+      }
+      if (data.isActive !== undefined) {
+        setClauses.push('isActive = ?')
+        params.push(data.isActive ? 1 : 0)
+      }
+      
+      if (setClauses.length === 0) {
+        throw new Error('No data provided for update')
+      }
+      
+      setClauses.push('updatedAt = ?')
+      params.push(new Date().toISOString())
+      params.push(id)
+      
+      const updateSql = `UPDATE PerformanceTarget SET ${setClauses.join(', ')} WHERE id = ?`
+      const updateResult = await this.executeQuery(updateSql, params)
+      
+      if (updateResult.error) {
+        throw new Error(updateResult.error)
+      }
+      
+      // Fetch and return the updated record
+      const selectSql = 'SELECT id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget WHERE id = ?'
+      const selectResult = await this.executeQuery(selectSql, [id])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('Target not found after update')
+      }
+      
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][colIndex]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      // Convert SQLite boolean back to JS boolean
+      if (record.isActive !== undefined) {
+        record.isActive = record.isActive === '1' || record.isActive === 1
+      }
+      
+      console.log('✅ updateTarget: Successfully updated target:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ updateTarget: Error updating target in Turso:', error)
+      throw error
+    }
+  }
+
+  async updateManyTargets(where: any, data: any): Promise<{ count: number }> {
+    console.log('🔄 updateManyTargets: Starting bulk update')
+    console.log('📝 updateManyTargets: Where:', where, 'Data:', data)
+    
+    try {
+      const setClauses: string[] = []
+      const setParams: any[] = []
+      
+      if (data.isActive !== undefined) {
+        setClauses.push('isActive = ?')
+        setParams.push(data.isActive ? 1 : 0)
+      }
+      
+      if (setClauses.length === 0) {
+        throw new Error('No data provided for update')
+      }
+      
+      setClauses.push('updatedAt = ?')
+      setParams.push(new Date().toISOString())
+      
+      // Build WHERE clause and collect its parameters
+      const conditions: string[] = []
+      const whereParams: any[] = []
+      
+      if (where.isActive === true) {
+        conditions.push('isActive = ?')
+        whereParams.push(1)
+      }
+      
+      const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+      const params = [...setParams, ...whereParams]
+      
+      const sql = `UPDATE PerformanceTarget SET ${setClauses.join(', ')} ${whereClause}`
+      console.log('🔍 updateManyTargets: SQL:', sql, 'Params:', params)
+      
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      console.log('✅ updateManyTargets: Bulk update completed successfully')
+      return { count: 1 }
+    } catch (error) {
+      console.error('❌ updateManyTargets: Error updating targets in Turso:', error)
+      throw error
+    }
+  }
+
+  async updateCategory(id: string, data: any): Promise<any> {
+    console.log('🔄 updateCategory: Starting update for ID:', id)
+    console.log('📝 updateCategory: Data:', data)
+    
+    try {
+      const setClauses: string[] = []
+      const params: any[] = []
+      
+      if (data.name !== undefined) {
+        setClauses.push('name = ?')
+        params.push(data.name)
+      }
+      if (data.scorePerOccurrence !== undefined) {
+        setClauses.push('scorePerOccurrence = ?')
+        params.push(data.scorePerOccurrence)
+      }
+      if (data.dimension !== undefined) {
+        setClauses.push('dimension = ?')
+        params.push(data.dimension)
+      }
+      if (data.description !== undefined) {
+        setClauses.push('description = ?')
+        params.push(data.description || null)
+      }
+      
+      if (setClauses.length === 0) {
+        throw new Error('No data provided for update')
+      }
+      
+      setClauses.push('updatedAt = ?')
+      params.push(new Date().toISOString())
+      params.push(id)
+      
+      const updateSql = `UPDATE Category SET ${setClauses.join(', ')} WHERE id = ?`
+      const updateResult = await this.executeQuery(updateSql, params)
+      
+      if (updateResult.error) {
+        throw new Error(updateResult.error)
+      }
+      
+      // Fetch and return the updated record
+      const selectSql = 'SELECT id, name, scorePerOccurrence, dimension, description, createdAt, updatedAt FROM Category WHERE id = ?'
+      const selectResult = await this.executeQuery(selectSql, [id])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('Category not found after update')
+      }
+      
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][colIndex]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      console.log('✅ updateCategory: Successfully updated category:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ updateCategory: Error updating category in Turso:', error)
+      throw error
+    }
+  }
+
+  async upsertWeeklyLog(data: { categoryId: string; week: string; count: number; overrideScore?: number }): Promise<any> {
+    console.log('🔄 upsertWeeklyLog: Starting upsert for week:', data.week)
+    console.log('📝 upsertWeeklyLog: Data:', data)
+    
+    try {
+      // First, try to find existing log
+      const checkSql = 'SELECT id FROM WeeklyLog WHERE categoryId = ? AND week = ?'
+      const checkResult = await this.executeQuery(checkSql, [data.categoryId, data.week])
+      
+      if (checkResult.error) {
+        throw new Error(checkResult.error)
+      }
+
+      const existingLog = checkResult.results?.[0]?.rows?.[0]
+      
+      if (existingLog) {
+        // Update existing log
+        console.log('📝 upsertWeeklyLog: Updating existing log')
+        const updateSql = 'UPDATE WeeklyLog SET count = ?, overrideScore = ? WHERE categoryId = ? AND week = ?'
+        const updateParams = [data.count, data.overrideScore || null, data.categoryId, data.week]
+        
+        const updateResult = await this.executeQuery(updateSql, updateParams)
+        if (updateResult.error) {
+          throw new Error(updateResult.error)
+        }
+      } else {
+        // Create new log
+        console.log('📝 upsertWeeklyLog: Creating new log')
+        const id = this.generateId()
+        const insertSql = 'INSERT INTO WeeklyLog (id, categoryId, week, count, overrideScore, createdAt) VALUES (?, ?, ?, ?, ?, ?)'
+        const insertParams = [id, data.categoryId, data.week, data.count, data.overrideScore || null, new Date().toISOString()]
+        
+        const insertResult = await this.executeQuery(insertSql, insertParams)
+        if (insertResult.error) {
+          throw new Error(insertResult.error)
+        }
+      }
+      
+      // Fetch and return the final record
+      const selectSql = 'SELECT id, categoryId, week, count, overrideScore, createdAt FROM WeeklyLog WHERE categoryId = ? AND week = ?'
+      const selectResult = await this.executeQuery(selectSql, [data.categoryId, data.week])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('Weekly log not found after upsert')
+      }
+      
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][colIndex]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      console.log('✅ upsertWeeklyLog: Successfully upserted weekly log:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ upsertWeeklyLog: Error upserting weekly log in Turso:', error)
       throw error
     }
   }
