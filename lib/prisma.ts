@@ -204,12 +204,36 @@ const createHybridClient = () => {
         console.log('📞 Hybrid client: performanceTarget.findMany() called with Turso')
         return await tursoClient.findManyTargets()
       },
+      create: async (options: { data: any }) => {
+        console.log('📞 Hybrid client: performanceTarget.create() called with Turso')
+        console.log('📝 Create data:', options.data)
+        try {
+          const result = await tursoClient.createTarget(options.data)
+          console.log('✅ Hybrid client: performanceTarget.create() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: performanceTarget.create() failed:', error)
+          throw error
+        }
+      },
     }
     
     hybridClient.category = {
       findMany: async (...args: any[]) => {
         console.log('📞 Hybrid client: category.findMany() called with Turso')
         return await tursoClient.findManyCategories()
+      },
+      create: async (options: { data: any }) => {
+        console.log('📞 Hybrid client: category.create() called with Turso')
+        console.log('📝 Create data:', options.data)
+        try {
+          const result = await tursoClient.createCategory(options.data)
+          console.log('✅ Hybrid client: category.create() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: category.create() failed:', error)
+          throw error
+        }
       },
     }
     

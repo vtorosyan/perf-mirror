@@ -449,6 +449,126 @@ class TursoHttpClient {
     }
   }
 
+  async createCategory(data: any): Promise<any> {
+    const id = this.generateId()
+    const now = new Date().toISOString()
+    
+    const insertSql = `INSERT INTO Category (id, name, scorePerOccurrence, dimension, description, createdAt, updatedAt) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    
+    const insertParams = [
+      id,
+      data.name,
+      data.scorePerOccurrence,
+      data.dimension,
+      data.description || null,
+      now,
+      now
+    ]
+    
+    try {
+      console.log('🔍 createCategory: Creating category in Turso...')
+      console.log('📝 createCategory: Data:', { id, ...data })
+      
+      const insertResult = await this.executeQuery(insertSql, insertParams)
+      
+      if (insertResult.error) {
+        throw new Error(insertResult.error)
+      }
+
+      console.log('✅ createCategory: Record inserted, now fetching it back...')
+      
+      const selectSql = 'SELECT id, name, scorePerOccurrence, dimension, description, createdAt, updatedAt FROM Category WHERE id = ?'
+      const selectResult = await this.executeQuery(selectSql, [id])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('No data returned from SELECT query after INSERT')
+      }
+
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        record[columnName] = rows[0][colIndex]
+      })
+      
+      console.log('✅ createCategory: Category created successfully:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ createCategory: Error creating category in Turso:', error)
+      throw error
+    }
+  }
+
+  async createTarget(data: any): Promise<any> {
+    const id = this.generateId()
+    const now = new Date().toISOString()
+    
+    const insertSql = `INSERT INTO PerformanceTarget (id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    
+    const insertParams = [
+      id,
+      data.name,
+      data.excellentThreshold,
+      data.goodThreshold,
+      data.needsImprovementThreshold,
+      data.timePeriodWeeks,
+      data.isActive ? 1 : 0,
+      now,
+      now
+    ]
+    
+    try {
+      console.log('🔍 createTarget: Creating target in Turso...')
+      console.log('📝 createTarget: Data:', { id, ...data })
+      
+      const insertResult = await this.executeQuery(insertSql, insertParams)
+      
+      if (insertResult.error) {
+        throw new Error(insertResult.error)
+      }
+
+      console.log('✅ createTarget: Record inserted, now fetching it back...')
+      
+      const selectSql = 'SELECT id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget WHERE id = ?'
+      const selectResult = await this.executeQuery(selectSql, [id])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('No data returned from SELECT query after INSERT')
+      }
+
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][colIndex]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      // Convert SQLite boolean back to JS boolean
+      if (record.isActive !== undefined) {
+        record.isActive = record.isActive === '1' || record.isActive === 1
+      }
+      
+      console.log('✅ createTarget: Target created successfully:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ createTarget: Error creating target in Turso:', error)
+      throw error
+    }
+  }
+
   async updateManyRoleWeights(where: any, data: any): Promise<{ count: number }> {
     console.log('🔄 updateManyRoleWeights: Starting bulk update')
     console.log('📝 updateManyRoleWeights: Where:', where, 'Data:', data)
