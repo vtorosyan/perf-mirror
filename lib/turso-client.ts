@@ -61,20 +61,13 @@ class TursoHttpClient {
             stmt: {
               sql: sql,
               args: params.map(param => {
-                // Convert parameters to Turso's expected format
-                if (typeof param === 'string') {
-                  return { type: "text", value: param }
-                } else if (typeof param === 'number') {
-                  if (Number.isInteger(param)) {
-                    return { type: "integer", value: param }
-                  } else {
-                    return { type: "float", value: param }
-                  }
-                } else if (typeof param === 'boolean') {
-                  return { type: "integer", value: param ? 1 : 0 }
-                } else if (param === null || param === undefined) {
+                // Convert all parameters to strings as Turso HTTP API expects
+                if (param === null || param === undefined) {
                   return { type: "null" }
+                } else if (typeof param === 'boolean') {
+                  return { type: "integer", value: param ? "1" : "0" }
                 } else {
+                  // Convert everything else to string
                   return { type: "text", value: String(param) }
                 }
               })
