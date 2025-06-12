@@ -458,9 +458,20 @@ class TursoHttpClient {
       let whereClause = ''
       let params: any[] = []
       
+      const conditions: string[] = []
+      
       if (where.isActive === true) {
-        whereClause = 'WHERE ISACTIVE = ?'
+        conditions.push('ISACTIVE = ?')
         params.push('1')
+      }
+      
+      if (where.id && where.id.not) {
+        conditions.push('ID != ?')
+        params.push(where.id.not)
+      }
+      
+      if (conditions.length > 0) {
+        whereClause = 'WHERE ' + conditions.join(' AND ')
       }
       
       // Build SET clause
@@ -475,6 +486,7 @@ class TursoHttpClient {
       }
       
       const sql = `UPDATE RoleWeights SET ${setClauses.join(', ')} ${whereClause}`
+      console.log('🔍 updateManyRoleWeights: SQL:', sql, 'Params:', params)
       
       const result = await this.executeQuery(sql, params)
       

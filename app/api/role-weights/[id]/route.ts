@@ -33,7 +33,10 @@ export async function PUT(
     // Deactivate other weights if this one is being activated
     if (isActive) {
       await prisma.roleWeights.updateMany({
-        where: { isActive: true },
+        where: { 
+          isActive: true,
+          id: { not: params.id }  // Exclude the current role from deactivation
+        },
         data: { isActive: false }
       })
     }
