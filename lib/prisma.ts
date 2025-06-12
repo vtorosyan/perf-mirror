@@ -22,25 +22,37 @@ function createPrismaClient(): PrismaClient {
   // Log environment variables (without sensitive data)
   const envCheck = {
     NODE_ENV: process.env.NODE_ENV,
+    VERCEL: process.env.VERCEL,
     hasTursoUrl: !!process.env.TURSO_DATABASE_URL,
     hasTursoToken: !!process.env.TURSO_AUTH_TOKEN,
     hasDatabaseUrl: !!process.env.DATABASE_URL,
-    tursoUrlPrefix: process.env.TURSO_DATABASE_URL ? process.env.TURSO_DATABASE_URL.substring(0, 20) + '...' : 'none',
-    databaseUrlPrefix: process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 20) + '...' : 'none'
   }
   console.log('Environment check:', envCheck)
 
-  // For development or when DATABASE_URL is a file
+  // For production/Vercel, don't use DATABASE_URL if it's a Turso URL
+  // because our Prisma schema uses sqlite provider which can't handle libsql:// URLs
+  if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+    console.log('🌐 PRODUCTION/VERCEL: Using local SQLite fallback (Turso handled by hybrid client)')
+    return new PrismaClient({
+      datasources: {
+        db: {
+          url: "file:./dev.db"
+        }
+      },
+      log: ['error'],
+    })
+  }
+
+  // For development, use DATABASE_URL only if it's a file: URL
   if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('file:')) {
-    console.log('💾 Using local SQLite database (file: protocol detected)')
-    
+    console.log('💾 DEVELOPMENT: Using local SQLite database')
     return new PrismaClient({
       log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
     })
   }
 
   // Default fallback to local SQLite
-  console.log('📁 Using default local SQLite database (fallback)')
+  console.log('📁 FALLBACK: Using default local SQLite database')
   return new PrismaClient({
     datasources: {
       db: {
@@ -133,20 +145,22 @@ const createHybridClient = () => {
   console.log('🔧 Creating hybrid database client...')
   console.log('Environment details:', {
     NODE_ENV: process.env.NODE_ENV,
-    isProduction: process.env.NODE_ENV === 'production'
+    VERCEL: process.env.VERCEL,
+    isProduction: process.env.NODE_ENV === 'production' || process.env.VERCEL
   })
   
   const tursoClient = getTursoClient()
   const prismaClient = getPrismaClient()
   
   // In development mode, ALWAYS use plain Prisma client
-  if (process.env.NODE_ENV !== 'production') {
-    console.log('💾 DEVELOPMENT MODE: Using Prisma client (no hybrid overrides)')
+  if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+    console.log('💾 DEVELOPMENT MODE: Using Prisma client')
     return prismaClient
   }
   
-  if (process.env.NODE_ENV === 'production' && tursoClient) {
-    console.log('🌐 PRODUCTION MODE: Using Turso HTTP client')
+  // In production/Vercel, use Turso if available
+  if ((process.env.NODE_ENV === 'production' || process.env.VERCEL) && tursoClient) {
+    console.log('🌐 PRODUCTION/VERCEL MODE: Using Turso HTTP client')
     
     // Create a custom object that implements the necessary Prisma methods
     const hybridClient = Object.create(prismaClient)
@@ -340,8 +354,8 @@ const createHybridClient = () => {
     return hybridClient
   }
 
-  if (process.env.NODE_ENV === 'production' && !tursoClient) {
-    console.log('⚠️ PRODUCTION MODE: Turso client not available, falling back to Prisma')
+  if ((process.env.NODE_ENV === 'production' || process.env.VERCEL) && !tursoClient) {
+    console.log('⚠️ PRODUCTION/VERCEL MODE: Turso client not available, falling back to Prisma')
   } else {
     console.log('💾 DEVELOPMENT MODE: Using Prisma client')
   }
