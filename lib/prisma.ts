@@ -161,6 +161,30 @@ const createHybridClient = () => {
           throw error
         }
       },
+      updateMany: async (options: { where: any; data: any }) => {
+        console.log('📞 Hybrid client: roleWeights.updateMany() called with Turso')
+        console.log('📝 UpdateMany options:', options)
+        try {
+          const result = await tursoClient.updateManyRoleWeights(options.where, options.data)
+          console.log('✅ Hybrid client: roleWeights.updateMany() successful:', result.count)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: roleWeights.updateMany() failed:', error)
+          throw error
+        }
+      },
+      update: async (options: { where: { id: string }; data: any }) => {
+        console.log('📞 Hybrid client: roleWeights.update() called with Turso')
+        console.log('📝 Update options:', options)
+        try {
+          const result = await tursoClient.updateRoleWeight(options.where.id, options.data)
+          console.log('✅ Hybrid client: roleWeights.update() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: roleWeights.update() failed:', error)
+          throw error
+        }
+      },
       create: async (options: { data: any }) => {
         console.log('📞 Hybrid client: roleWeights.create() called with Turso')
         console.log('📝 Create data:', options.data)

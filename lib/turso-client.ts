@@ -448,6 +448,145 @@ class TursoHttpClient {
       return []
     }
   }
+
+  async updateManyRoleWeights(where: any, data: any): Promise<{ count: number }> {
+    console.log('🔄 updateManyRoleWeights: Starting bulk update')
+    console.log('📝 updateManyRoleWeights: Where:', where, 'Data:', data)
+    
+    try {
+      // Build WHERE clause
+      let whereClause = ''
+      let params: any[] = []
+      
+      if (where.isActive === true) {
+        whereClause = 'WHERE ISACTIVE = ?'
+        params.push('1')
+      }
+      
+      // Build SET clause
+      const setClauses: string[] = []
+      if (data.isActive !== undefined) {
+        setClauses.push('ISACTIVE = ?')
+        params.push(data.isActive ? '1' : '0')
+      }
+      
+      if (setClauses.length === 0) {
+        throw new Error('No data provided for update')
+      }
+      
+      const sql = `UPDATE RoleWeights SET ${setClauses.join(', ')} ${whereClause}`
+      
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      console.log('✅ updateManyRoleWeights: Bulk update completed')
+      return { count: 1 } // Turso doesn't return affected rows count, so we return 1
+    } catch (error) {
+      console.error('❌ updateManyRoleWeights: Error updating role weights in Turso:', error)
+      throw error
+    }
+  }
+
+  async updateRoleWeight(id: string, data: any): Promise<DatabaseRecord> {
+    console.log('🔄 updateRoleWeight: Starting update for ID:', id)
+    console.log('📝 updateRoleWeight: Data:', data)
+    
+    try {
+      // Build SET clause and params
+      const setClauses: string[] = []
+      const params: any[] = []
+      
+      if (data.name !== undefined) {
+        setClauses.push('NAME = ?')
+        params.push(data.name)
+      }
+      if (data.inputWeight !== undefined) {
+        setClauses.push('INPUTWEIGHT = ?')
+        params.push(data.inputWeight.toString())
+      }
+      if (data.outputWeight !== undefined) {
+        setClauses.push('OUTPUTWEIGHT = ?')
+        params.push(data.outputWeight.toString())
+      }
+      if (data.outcomeWeight !== undefined) {
+        setClauses.push('OUTCOMEWEIGHT = ?')
+        params.push(data.outcomeWeight.toString())
+      }
+      if (data.impactWeight !== undefined) {
+        setClauses.push('IMPACTWEIGHT = ?')
+        params.push(data.impactWeight.toString())
+      }
+      if (data.isActive !== undefined) {
+        setClauses.push('ISACTIVE = ?')
+        params.push(data.isActive ? '1' : '0')
+      }
+      
+      if (setClauses.length === 0) {
+        throw new Error('No data provided for update')
+      }
+      
+      // Add the ID parameter for WHERE clause
+      params.push(id)
+      
+      const updateSql = `UPDATE RoleWeights SET ${setClauses.join(', ')} WHERE ID = ?`
+      
+      // Execute the update
+      const updateResult = await this.executeQuery(updateSql, params)
+      
+      if (updateResult.error) {
+        throw new Error(updateResult.error)
+      }
+      
+      // Fetch and return the updated record
+      const selectSql = `SELECT 
+        ID as id,
+        NAME as name,
+        INPUTWEIGHT as inputWeight,
+        OUTPUTWEIGHT as outputWeight,
+        OUTCOMEWEIGHT as outcomeWeight,
+        IMPACTWEIGHT as impactWeight,
+        ISACTIVE as isActive,
+        CREATEDAT as createdAt,
+        UPDATEDAT as updatedAt
+      FROM RoleWeights WHERE ID = ?`
+      
+      const selectResult = await this.executeQuery(selectSql, [id])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('Role weight not found after update')
+      }
+      
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        // Handle case where col might be an object with name property
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][colIndex]
+        // Extract value from Turso's type wrapper if present
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      // Convert SQLite boolean back to JS boolean
+      if (record.isActive !== undefined) {
+        record.isActive = record.isActive === '1' || record.isActive === 1
+      }
+      
+      console.log('✅ updateRoleWeight: Successfully updated role weight:', record.id)
+      return record as DatabaseRecord
+    } catch (error) {
+      console.error('❌ updateRoleWeight: Error updating role weight in Turso:', error)
+      throw error
+    }
+  }
 }
 
 export { TursoHttpClient } 
