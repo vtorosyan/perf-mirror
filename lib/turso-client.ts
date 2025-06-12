@@ -169,7 +169,7 @@ class TursoHttpClient {
         
         // Convert SQLite boolean back to JS boolean
         if (record.isActive !== undefined) {
-          record.isActive = record.isActive === 1
+          record.isActive = record.isActive === '1' || record.isActive === 1
         }
         
         console.log(`📝 findManyRoleWeights: Record ${index + 1}:`, {
@@ -220,7 +220,7 @@ class TursoHttpClient {
       
       // Convert SQLite boolean back to JS boolean
       if (record.isActive !== undefined) {
-        record.isActive = record.isActive === 1
+        record.isActive = record.isActive === '1' || record.isActive === 1
       }
       
       console.log('✅ findFirstRoleWeights: First role weight found:', {
@@ -291,7 +291,7 @@ class TursoHttpClient {
       
       // Convert SQLite boolean back to JS boolean
       if (record.isActive !== undefined) {
-        record.isActive = record.isActive === 1
+        record.isActive = record.isActive === '1' || record.isActive === 1
       }
       
       console.log('✅ createRoleWeight: Role weight created successfully:', {
