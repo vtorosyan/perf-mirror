@@ -191,11 +191,11 @@ class TursoHttpClient {
     const id = this.generateId()
     const now = new Date().toISOString()
     
-    const sql = `INSERT INTO RoleWeights (id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
-                 RETURNING id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt`
+    // First insert the record
+    const insertSql = `INSERT INTO RoleWeights (id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
     
-    const params = [
+    const insertParams = [
       id,
       data.name,
       data.inputWeight,
@@ -211,17 +211,28 @@ class TursoHttpClient {
       console.log('🔍 createRoleWeight: Creating role weight in Turso...')
       console.log('📝 createRoleWeight: Data:', { id, ...data })
       
-      const result = await this.executeQuery(sql, params)
+      // Execute the insert
+      const insertResult = await this.executeQuery(insertSql, insertParams)
       
-      if (result.error) {
-        throw new Error(result.error)
+      if (insertResult.error) {
+        throw new Error(insertResult.error)
       }
 
-      if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
-        throw new Error('No data returned from CREATE query')
+      console.log('✅ createRoleWeight: Record inserted, now fetching it back...')
+      
+      // Now fetch the created record
+      const selectSql = 'SELECT id, name, inputWeight, outputWeight, outcomeWeight, impactWeight, isActive, createdAt, updatedAt FROM RoleWeights WHERE id = ?'
+      const selectResult = await this.executeQuery(selectSql, [id])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
       }
 
-      const { columns, rows } = result.results[0]
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('No data returned from SELECT query after INSERT')
+      }
+
+      const { columns, rows } = selectResult.results[0]
       const record: any = {}
       columns.forEach((col, colIndex) => {
         record[col] = rows[0][colIndex]
