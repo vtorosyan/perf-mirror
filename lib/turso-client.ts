@@ -66,12 +66,12 @@ class TursoHttpClient {
                   return { type: "text", value: param }
                 } else if (typeof param === 'number') {
                   if (Number.isInteger(param)) {
-                    return { type: "integer", value: param.toString() }
+                    return { type: "integer", value: param }
                   } else {
-                    return { type: "float", value: param.toString() }
+                    return { type: "float", value: param }
                   }
                 } else if (typeof param === 'boolean') {
-                  return { type: "integer", value: param ? "1" : "0" }
+                  return { type: "integer", value: param ? 1 : 0 }
                 } else if (param === null || param === undefined) {
                   return { type: "null" }
                 } else {
