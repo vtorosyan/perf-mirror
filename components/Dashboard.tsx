@@ -28,6 +28,36 @@ interface WeeklyLog {
   }
 }
 
+// Helper function to safely extract values and prevent React error #31
+const safeValue = (value: any): string | number => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object' && value && 'value' in value) {
+    return value.value
+  }
+  if (typeof value === 'object' && value && 'type' in value) {
+    return value.value || ''
+  }
+  return value
+}
+
+// Helper function to safely transform weekly log data
+const transformWeeklyLog = (rawLog: any): WeeklyLog | null => {
+  if (!rawLog || !rawLog.category) return null
+  
+  return {
+    id: safeValue(rawLog.id) as string,
+    categoryId: safeValue(rawLog.categoryId) as string,
+    week: safeValue(rawLog.week) as string,
+    count: Number(safeValue(rawLog.count)) || 0,
+    overrideScore: rawLog.overrideScore !== undefined ? Number(safeValue(rawLog.overrideScore)) : undefined,
+    category: {
+      name: safeValue(rawLog.category.name) as string,
+      scorePerOccurrence: Number(safeValue(rawLog.category.scorePerOccurrence)) || 0,
+      dimension: safeValue(rawLog.category.dimension) as string,
+    }
+  }
+}
+
 interface PerformanceTarget {
   id: string
   name: string
@@ -63,11 +93,16 @@ export default function Dashboard() {
         fetch('/api/role-weights')
       ])
 
-      const logs = await logsResponse.json()
+      const rawLogs = await logsResponse.json()
       const targetsData = await targetsResponse.json()
       const weightsData = await weightsResponse.json()
 
-      setWeeklyLogs(logs)
+      // Transform logs to prevent React error #31
+      const transformedLogs = Array.isArray(rawLogs) 
+        ? rawLogs.map(transformWeeklyLog).filter(log => log !== null)
+        : []
+      
+      setWeeklyLogs(transformedLogs)
       setTargets(targetsData)
       
       // Find active role weights
@@ -103,9 +138,12 @@ export default function Dashboard() {
         const dimensionScores = calculateDimensionScores(weekLogs)
         score = Math.round(calculateWeightedScore(dimensionScores, roleWeights))
       } else {
-        score = weekLogs.reduce((total, log) => 
-          total + (log.overrideScore ?? (log.count * log.category.scorePerOccurrence)), 0
-        )
+        score = weekLogs.reduce((total, log) => {
+          const safeCount = Number(safeValue(log.count)) || 0
+          const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
+          const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
+          return total + (safeOverrideScore ?? (safeCount * safeScorePerOccurrence))
+        }, 0)
       }
       
       return {
@@ -145,9 +183,12 @@ export default function Dashboard() {
       const dimensionScores = calculateDimensionScores(currentWeekLogs)
       return Math.round(calculateWeightedScore(dimensionScores, roleWeights))
     } else {
-      return currentWeekLogs.reduce((total, log) => 
-        total + (log.overrideScore ?? (log.count * log.category.scorePerOccurrence)), 0
-      )
+      return currentWeekLogs.reduce((total, log) => {
+        const safeCount = Number(safeValue(log.count)) || 0
+        const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
+        const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
+        return total + (safeOverrideScore ?? (safeCount * safeScorePerOccurrence))
+      }, 0)
     }
   }
 
@@ -259,7 +300,7 @@ export default function Dashboard() {
                   dimension === 'output' ? 'text-green-600' :
                   dimension === 'outcome' ? 'text-purple-600' : 'text-orange-600'
                 }`}>
-                  {score}
+                  {Number(safeValue(score)) || 0}
                 </div>
                 <div className="text-sm font-medium text-gray-900">{getDimensionLabel(dimension)}</div>
                 <div className="text-xs text-gray-500 mt-1">
@@ -349,13 +390,18 @@ export default function Dashboard() {
             .map((log) => (
               <div key={log.id} className="flex justify-between items-center py-2 border-b border-gray-100">
                 <div>
-                  <span className="font-medium">{log.category.name}</span>
-                  <span className="text-sm text-gray-500 ml-2">{formatWeekString(log.week)}</span>
+                  <span className="font-medium">{safeValue(log.category?.name)}</span>
+                  <span className="text-sm text-gray-500 ml-2">{formatWeekString(safeValue(log.week) as string)}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-sm text-gray-600">{log.count}x</span>
+                  <span className="text-sm text-gray-600">{Number(safeValue(log.count)) || 0}x</span>
                   <span className={`text-sm ml-2 ${log.overrideScore !== undefined ? 'text-orange-600' : 'text-blue-600'}`}>
-                    +{log.overrideScore ?? (log.count * log.category.scorePerOccurrence)} pts
+                    +{(() => {
+                      const safeCount = Number(safeValue(log.count)) || 0
+                      const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
+                      const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
+                      return safeOverrideScore ?? (safeCount * safeScorePerOccurrence)
+                    })()} pts
                     {log.overrideScore !== undefined && (
                       <span className="text-xs text-gray-500 ml-1">(override)</span>
                     )}
