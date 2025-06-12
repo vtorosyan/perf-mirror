@@ -182,7 +182,9 @@ class TursoHttpClient {
       const records = rows.map((row, index) => {
         const record: any = {}
         columns.forEach((col, colIndex) => {
-          record[col] = row[colIndex]
+          // Handle case where col might be an object with name property
+          const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+          record[columnName] = row[colIndex]
         })
         
         // Convert SQLite boolean back to JS boolean
@@ -227,7 +229,9 @@ class TursoHttpClient {
       
       const record: any = {}
       columns.forEach((col, colIndex) => {
-        record[col] = rows[0][colIndex]
+        // Handle case where col might be an object with name property
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        record[columnName] = rows[0][colIndex]
       })
       
       // Convert SQLite boolean back to JS boolean
@@ -296,7 +300,9 @@ class TursoHttpClient {
       const { columns, rows } = selectResult.results[0]
       const record: any = {}
       columns.forEach((col, colIndex) => {
-        record[col] = rows[0][colIndex]
+        // Handle case where col might be an object with name property
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        record[columnName] = rows[0][colIndex]
       })
       
       // Convert SQLite boolean back to JS boolean
@@ -339,7 +345,9 @@ class TursoHttpClient {
       const records = rows.map((row, index) => {
         const record: any = {}
         columns.forEach((col, colIndex) => {
-          record[col] = row[colIndex]
+          // Handle case where col might be an object with name property
+          const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+          record[columnName] = row[colIndex]
         })
         console.log(`📝 findManyTargets: Record ${index + 1}:`, {
           id: record.id,
@@ -379,7 +387,9 @@ class TursoHttpClient {
       const records = rows.map((row, index) => {
         const record: any = {}
         columns.forEach((col, colIndex) => {
-          record[col] = row[colIndex]
+          // Handle case where col might be an object with name property
+          const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+          record[columnName] = row[colIndex]
         })
         console.log(`📝 findManyCategories: Record ${index + 1}:`, {
           id: record.id,
@@ -432,7 +442,9 @@ class TursoHttpClient {
       const records = rows.map((row, index) => {
         const record: any = {}
         columns.forEach((col, colIndex) => {
-          record[col] = row[colIndex]
+          // Handle case where col might be an object with name property
+          const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+          record[columnName] = row[colIndex]
         })
         if (index < 3) { // Log first 3 records for debugging
           console.log(`📝 findManyWeeklyLogs: Record ${index + 1}:`, {
