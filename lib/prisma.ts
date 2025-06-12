@@ -152,12 +152,26 @@ const createHybridClient = () => {
       },
       findFirst: async (...args: any[]) => {
         console.log('📞 Hybrid client: roleWeights.findFirst() called with Turso')
-        return await tursoClient.findFirstRoleWeights()
+        try {
+          const result = await tursoClient.findFirstRoleWeights()
+          console.log('✅ Hybrid client: roleWeights.findFirst() result:', result ? 'found' : 'not found')
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: roleWeights.findFirst() failed:', error)
+          throw error
+        }
       },
       create: async (options: { data: any }) => {
         console.log('📞 Hybrid client: roleWeights.create() called with Turso')
         console.log('📝 Create data:', options.data)
-        return await tursoClient.createRoleWeight(options.data)
+        try {
+          const result = await tursoClient.createRoleWeight(options.data)
+          console.log('✅ Hybrid client: roleWeights.create() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: roleWeights.create() failed:', error)
+          throw error
+        }
       },
     }
     
