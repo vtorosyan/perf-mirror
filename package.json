@@ -13,9 +13,12 @@
   },
   "dependencies": {
     "@flydotio/litestream": "^1.0.1",
-    "@prisma/client": "^5.0.0",
+    "@libsql/client": "^0.15.9",
+    "@prisma/adapter-libsql": "^6.9.0",
+    "@prisma/client": "^6.9.0",
     "clsx": "^2.0.0",
     "date-fns": "^2.30.0",
+    "dotenv": "^16.5.0",
     "lucide-react": "^0.294.0",
     "next": "^14.0.0",
     "react": "^18.0.0",
@@ -31,7 +34,7 @@
     "eslint": "^8.45.0",
     "eslint-config-next": "^14.0.0",
     "postcss": "^8.4.24",
-    "prisma": "^5.0.0",
+    "prisma": "^6.9.0",
     "tailwindcss": "^3.3.0",
     "typescript": "^5.0.0"
   },
