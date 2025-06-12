@@ -184,7 +184,11 @@ class TursoHttpClient {
         columns.forEach((col, colIndex) => {
           // Handle case where col might be an object with name property
           const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-          record[columnName] = row[colIndex]
+          const cellValue = row[colIndex]
+          // Extract value from Turso's type wrapper if present
+          record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+            ? cellValue.value 
+            : cellValue
         })
         
         // Convert SQLite boolean back to JS boolean
@@ -231,7 +235,11 @@ class TursoHttpClient {
       columns.forEach((col, colIndex) => {
         // Handle case where col might be an object with name property
         const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-        record[columnName] = rows[0][colIndex]
+        const cellValue = rows[0][colIndex]
+        // Extract value from Turso's type wrapper if present
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
       })
       
       // Convert SQLite boolean back to JS boolean
