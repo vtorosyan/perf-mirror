@@ -139,6 +139,12 @@ const createHybridClient = () => {
   const tursoClient = getTursoClient()
   const prismaClient = getPrismaClient()
   
+  // In development mode, ALWAYS use plain Prisma client
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('💾 DEVELOPMENT MODE: Using Prisma client (no hybrid overrides)')
+    return prismaClient
+  }
+  
   if (process.env.NODE_ENV === 'production' && tursoClient) {
     console.log('🌐 PRODUCTION MODE: Using Turso HTTP client')
     
@@ -298,9 +304,10 @@ const createHybridClient = () => {
     }
     
     hybridClient.weeklyLog = {
-      findMany: async (options?: { where?: { week?: { in: string[] } } }) => {
+      findMany: async (options?: { where?: { week?: { in: string[] } }; include?: any; orderBy?: any }) => {
         console.log('📞 Hybrid client: weeklyLog.findMany() called with Turso')
         const weeks = options?.where?.week?.in
+        // For Turso, we always include category data since it's needed for calculations
         return await tursoClient.findManyWeeklyLogs(weeks)
       },
       upsert: async (options: { 

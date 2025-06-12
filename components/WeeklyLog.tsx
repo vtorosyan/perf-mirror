@@ -130,11 +130,16 @@ export default function WeeklyLog() {
       setLogEntries(prevEntries => 
         prevEntries.map(entry => {
           const existingLog = logs.find((log: WeeklyLog) => log.categoryId === entry.categoryId)
-          return {
+          
+          const hasOverride = existingLog && existingLog.overrideScore !== null && existingLog.overrideScore !== undefined
+          
+          const updatedEntry = {
             ...entry,
-            count: existingLog ? existingLog.count : 0,
-            overrideScore: existingLog?.overrideScore
+            count: existingLog ? Number(existingLog.count) || 0 : 0,
+            overrideScore: hasOverride ? Number(existingLog.overrideScore) : undefined
           }
+          
+          return updatedEntry
         })
       )
     } catch (error) {
@@ -186,7 +191,8 @@ export default function WeeklyLog() {
         })
       )
 
-      await Promise.all(savePromises)
+      const responses = await Promise.all(savePromises)
+      
       await fetchWeeklyLogs()
       alert('Weekly log saved successfully!')
     } catch (error) {
@@ -243,8 +249,11 @@ export default function WeeklyLog() {
 
   const getAvailableWeeks = (): string[] => {
     const weeks = getPreviousWeeks(12)
-    const futureWeeks = [getCurrentWeekString()]
-    return [...weeks, ...futureWeeks]
+    const currentWeek = getCurrentWeekString()
+    
+    // Remove duplicates by filtering out current week from previous weeks if it exists
+    const uniqueWeeks = weeks.filter(week => week !== currentWeek)
+    return [...uniqueWeeks, currentWeek]
   }
 
   if (loading) {

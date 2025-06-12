@@ -63,12 +63,34 @@ export interface RoleWeights {
   isActive?: boolean
 }
 
+// Helper function to safely extract values
+const safeValue = (value: any): string | number => {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'object' && value && 'value' in value) {
+    return value.value
+  }
+  if (typeof value === 'object' && value && 'type' in value) {
+    return value.value || ''
+  }
+  return value
+}
+
 export function calculateDimensionScores(logs: any[]): DimensionScore {
   const dimensions = { input: 0, output: 0, outcome: 0, impact: 0 }
   
   logs.forEach(log => {
-    const score = log.overrideScore ?? (log.count * log.category.scorePerOccurrence)
-    dimensions[log.category.dimension as keyof DimensionScore] += score
+    if (!log.category) return
+    
+    const safeCount = Number(safeValue(log.count)) || 0
+    const safeScorePerOccurrence = Number(safeValue(log.category.scorePerOccurrence)) || 0
+    const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
+    const safeDimension = safeValue(log.category.dimension) as string
+    
+    const score = safeOverrideScore ?? (safeCount * safeScorePerOccurrence)
+    
+    if (safeDimension && dimensions.hasOwnProperty(safeDimension)) {
+      dimensions[safeDimension as keyof DimensionScore] += score
+    }
   })
   
   return dimensions

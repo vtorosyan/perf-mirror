@@ -49,7 +49,7 @@ const transformWeeklyLog = (rawLog: any): WeeklyLog | null => {
     categoryId: safeValue(rawLog.categoryId) as string,
     week: safeValue(rawLog.week) as string,
     count: Number(safeValue(rawLog.count)) || 0,
-    overrideScore: rawLog.overrideScore !== undefined ? Number(safeValue(rawLog.overrideScore)) : undefined,
+    overrideScore: rawLog.overrideScore !== null && rawLog.overrideScore !== undefined ? Number(safeValue(rawLog.overrideScore)) : undefined,
     category: {
       name: safeValue(rawLog.category.name) as string,
       scorePerOccurrence: Number(safeValue(rawLog.category.scorePerOccurrence)) || 0,
@@ -87,6 +87,8 @@ export default function Dashboard() {
   const fetchData = async () => {
     try {
       const weeks = getPreviousWeeks(12)
+      console.log(`📅 Dashboard fetching data for weeks: ${weeks.join(',')}`)
+      
       const [logsResponse, targetsResponse, weightsResponse] = await Promise.all([
         fetch(`/api/weekly-logs?weeks=${weeks.join(',')}`),
         fetch('/api/targets'),
@@ -97,10 +99,16 @@ export default function Dashboard() {
       const targetsData = await targetsResponse.json()
       const weightsData = await weightsResponse.json()
 
+      console.log(`📊 Dashboard received ${rawLogs.length} raw logs:`, rawLogs)
+      console.log(`🎯 Dashboard received ${targetsData.length} targets`)
+      console.log(`⚖️ Dashboard received ${weightsData.length} role weights`)
+
       // Transform logs to prevent React error #31
       const transformedLogs = Array.isArray(rawLogs) 
         ? rawLogs.map(transformWeeklyLog).filter(log => log !== null)
         : []
+      
+      console.log(`✅ Dashboard transformed ${transformedLogs.length} logs successfully`)
       
       setWeeklyLogs(transformedLogs)
       setTargets(targetsData)
@@ -108,6 +116,7 @@ export default function Dashboard() {
       // Find active role weights
       const activeWeights = weightsData.find((weight: any) => weight.isActive)
       if (activeWeights) {
+        console.log(`⚖️ Found active role weights: ${activeWeights.name}`)
         // Validate weight values
         const validatedWeights = {
           ...activeWeights,
@@ -118,6 +127,7 @@ export default function Dashboard() {
         }
         setRoleWeights(validatedWeights)
       } else {
+        console.log('⚠️ No active role weights found')
         setRoleWeights(null)
       }
     } catch (error) {
@@ -129,14 +139,17 @@ export default function Dashboard() {
 
   const calculateWeeklyScores = (): WeeklyScore[] => {
     const weeks = getPreviousWeeks(12)
+
     
     return weeks.map(week => {
       const weekLogs = weeklyLogs.filter(log => log.week === week)
+      console.log(`📅 Week ${week} has ${weekLogs.length} logs:`, weekLogs)
       
       let score: number
       if (roleWeights) {
         const dimensionScores = calculateDimensionScores(weekLogs)
         score = Math.round(calculateWeightedScore(dimensionScores, roleWeights))
+        console.log(`⚖️ Week ${week} weighted score: ${score} (from dimensions:`, dimensionScores, `)`)
       } else {
         score = weekLogs.reduce((total, log) => {
           const safeCount = Number(safeValue(log.count)) || 0
@@ -144,6 +157,7 @@ export default function Dashboard() {
           const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
           return total + (safeOverrideScore ?? (safeCount * safeScorePerOccurrence))
         }, 0)
+        console.log(`📊 Week ${week} raw score: ${score}`)
       }
       
       return {
@@ -178,17 +192,22 @@ export default function Dashboard() {
   const getCurrentWeekScore = (): number => {
     const currentWeek = getCurrentWeekString()
     const currentWeekLogs = weeklyLogs.filter(log => log.week === currentWeek)
+    console.log(`📅 Current week (${currentWeek}) has ${currentWeekLogs.length} logs:`, currentWeekLogs)
     
     if (roleWeights) {
       const dimensionScores = calculateDimensionScores(currentWeekLogs)
-      return Math.round(calculateWeightedScore(dimensionScores, roleWeights))
+      const score = Math.round(calculateWeightedScore(dimensionScores, roleWeights))
+      console.log(`⚖️ Current week weighted score: ${score}`)
+      return score
     } else {
-      return currentWeekLogs.reduce((total, log) => {
+      const score = currentWeekLogs.reduce((total, log) => {
         const safeCount = Number(safeValue(log.count)) || 0
         const safeScorePerOccurrence = Number(safeValue(log.category?.scorePerOccurrence)) || 0
         const safeOverrideScore = log.overrideScore !== undefined ? Number(safeValue(log.overrideScore)) : undefined
         return total + (safeOverrideScore ?? (safeCount * safeScorePerOccurrence))
       }, 0)
+      console.log(`📊 Current week raw score: ${score}`)
+      return score
     }
   }
 

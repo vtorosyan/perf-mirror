@@ -13,14 +13,50 @@ type Tab = 'dashboard' | 'log' | 'categories' | 'targets' | 'weights' | 'readme'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
-  const [dashboardRefreshKey, setDashboardRefreshKey] = useState<number>(Date.now())
+  const [dashboardRefreshKey, setDashboardRefreshKey] = useState<number>(0)
+  const [mounted, setMounted] = useState(false)
+  
+  useEffect(() => {
+    setMounted(true)
+    setDashboardRefreshKey(Date.now())
+  }, [])
   
   const handleTabSwitch = (tab: Tab) => {
     setActiveTab(tab)
     // Only refresh Dashboard when switching TO it
-    if (tab === 'dashboard') {
+    if (tab === 'dashboard' && mounted) {
       setDashboardRefreshKey(Date.now())
     }
+  }
+  
+  // Prevent hydration mismatch by not rendering until mounted
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <header className="bg-white shadow-sm border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center">
+                <TrendingUp className="h-8 w-8 text-blue-600 mr-3" />
+                <h1 className="text-2xl font-bold text-gray-900">PerfMirror</h1>
+              </div>
+            </div>
+          </div>
+        </header>
+        <nav className="bg-white border-b">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex space-x-8">
+              <div className="animate-pulse bg-gray-200 h-12 w-24 rounded"></div>
+              <div className="animate-pulse bg-gray-200 h-12 w-24 rounded"></div>
+              <div className="animate-pulse bg-gray-200 h-12 w-24 rounded"></div>
+            </div>
+          </div>
+        </nav>
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
+        </main>
+      </div>
+    )
   }
 
   const tabs = [
