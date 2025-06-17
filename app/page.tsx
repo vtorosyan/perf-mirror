@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { BarChart3, Settings, Target, TrendingUp, Plus, Scale, BookOpen } from 'lucide-react'
+import { BarChart3, Settings, Target, TrendingUp, Plus, Scale, BookOpen, User } from 'lucide-react'
 import Dashboard from '@/components/Dashboard'
 import Categories from '@/components/Categories'
 import WeeklyLog from '@/components/WeeklyLog'
 import PerformanceTargets from '@/components/PerformanceTargets'
 import RoleWeights from '@/components/RoleWeights'
+import RoleSetup from '@/components/RoleSetup'
 import Readme from '@/components/Readme'
 
-type Tab = 'dashboard' | 'log' | 'categories' | 'targets' | 'weights' | 'readme'
+type Tab = 'dashboard' | 'log' | 'categories' | 'targets' | 'weights' | 'setup' | 'readme'
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
@@ -18,7 +19,8 @@ export default function Home() {
     log: Date.now(),
     categories: Date.now(),
     targets: Date.now(),
-    weights: Date.now()
+    weights: Date.now(),
+    setup: Date.now()
   })
   const [mounted, setMounted] = useState(false)
   
@@ -87,6 +89,7 @@ export default function Home() {
     { id: 'categories' as Tab, name: 'Categories', icon: Settings },
     { id: 'targets' as Tab, name: 'Targets', icon: Target },
     { id: 'weights' as Tab, name: 'Role Weights', icon: Scale },
+    { id: 'setup' as Tab, name: 'Role Setup', icon: User },
     { id: 'readme' as Tab, name: 'Readme', icon: BookOpen },
   ]
 
@@ -133,6 +136,7 @@ export default function Home() {
         {activeTab === 'categories' && <Categories key={`categories-${refreshKeys.categories}`} onDataChange={refreshDataComponents} />}
         {activeTab === 'targets' && <PerformanceTargets key={`targets-${refreshKeys.targets}`} onDataChange={refreshDataComponents} />}
         {activeTab === 'weights' && <RoleWeights key={`weights-${refreshKeys.weights}`} onDataChange={refreshDataComponents} />}
+        {activeTab === 'setup' && <RoleSetup key={`setup-${refreshKeys.setup}`} onDataChange={refreshDataComponents} />}
         {activeTab === 'readme' && <Readme />}
       </main>
     </div>

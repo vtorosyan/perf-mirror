@@ -56,4 +56,39 @@ model RoleWeights {
   isActive      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  role      String   // "IC" or "Manager"
+  level     Int      // 1-8 for ICs, 4-8 for Managers
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LevelExpectation {
+  id          String   @id @default(cuid())
+  role        String   // "IC" or "Manager"
+  level       Int      // Level number
+  expectations String  // JSON array of expectation strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([role, level])
+}
+
+model CategoryTemplate {
+  id                    String   @id @default(cuid())
+  role                  String   // "IC" or "Manager"
+  level                 Int      // Level number
+  categoryName          String   
+  dimension             String   // input, output, outcome, impact
+  scorePerOccurrence    Int
+  expectedWeeklyCount   Float    // Expected average weekly count
+  description           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([role, level, categoryName])
 } 
