@@ -124,7 +124,7 @@ export default function Categories({ onDataChange }: CategoriesProps) {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this category? This will also delete all associated logs.')) {
+    if (!confirm('Are you sure you want to delete this category?\n\nThis will:\n1. Remove the category from your list\n2. Delete all historical logs for this category\n3. Remove it from your performance calculations\n\nThis action cannot be undone.')) {
       return
     }
 

@@ -128,12 +128,15 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
     try {
       const response = await fetch(`/api/weekly-logs?weeks=${selectedWeek}`)
       const logs = await response.json()
-      setWeeklyLogs(logs)
+      
+      // Filter out logs with missing categories
+      const validLogs = logs.filter((log: WeeklyLog) => log.category)
+      setWeeklyLogs(validLogs)
       
       // Update log entries with existing data
       setLogEntries(prevEntries => 
         prevEntries.map(entry => {
-          const existingLog = logs.find((log: WeeklyLog) => log.categoryId === entry.categoryId)
+          const existingLog = validLogs.find((log: WeeklyLog) => log.categoryId === entry.categoryId)
           
           const hasOverride = existingLog && existingLog.overrideScore !== null && existingLog.overrideScore !== undefined
           

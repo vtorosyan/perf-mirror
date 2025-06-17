@@ -133,6 +133,33 @@ export default function PerformanceTargets({ onDataChange }: PerformanceTargetsP
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this target? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/targets/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await fetchTargets()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to delete target')
+      }
+    } catch (error) {
+      console.error('Error deleting target:', error)
+      alert('Failed to delete target')
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -405,6 +432,14 @@ export default function PerformanceTargets({ onDataChange }: PerformanceTargetsP
                     >
                       <Pencil className="h-4 w-4" />
                     </button>
+                    {!target.isActive && (
+                      <button
+                        onClick={() => handleDelete(target.id)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

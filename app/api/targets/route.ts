@@ -21,6 +21,8 @@ const transformTarget = (rawTarget: any): any => {
   return {
     id: safeValue(rawTarget.id),
     name: safeValue(rawTarget.name),
+    role: safeValue(rawTarget.role),
+    level: safeValue(rawTarget.level) ? parseInt(safeValue(rawTarget.level)) : null,
     excellentThreshold: parseInt(safeValue(rawTarget.excellentThreshold)) || 0,
     goodThreshold: parseInt(safeValue(rawTarget.goodThreshold)) || 0,
     needsImprovementThreshold: parseInt(safeValue(rawTarget.needsImprovementThreshold)) || 0,
@@ -31,10 +33,28 @@ const transformTarget = (rawTarget: any): any => {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const role = searchParams.get('role')
+    const level = searchParams.get('level')
+    
+    // Build where clause based on query parameters
+    const whereClause: any = {}
+    if (role) {
+      whereClause.role = role
+    }
+    if (level) {
+      whereClause.level = parseInt(level)
+    }
+    
     const targets = await prisma.performanceTarget.findMany({
-      orderBy: { createdAt: 'desc' }
+      where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+      orderBy: [
+        { role: 'asc' },
+        { level: 'asc' },
+        { createdAt: 'desc' }
+      ]
     })
     
     // Transform the data to handle Turso's wrapped format
@@ -51,6 +71,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { 
       name,
+      role,
+      level,
       excellentThreshold,
       goodThreshold,
       needsImprovementThreshold,
@@ -58,17 +80,32 @@ export async function POST(request: NextRequest) {
       isActive 
     } = body
 
-    // Deactivate other targets if this one is active
+    // Validate required fields
+    if (!name || !role) {
+      return NextResponse.json({ error: 'Name and role are required' }, { status: 400 })
+    }
+
+    // Validate role
+    if (!['IC', 'Manager'].includes(role)) {
+      return NextResponse.json({ error: 'Role must be IC or Manager' }, { status: 400 })
+    }
+
+    // Deactivate other targets for the same role if this one is active
     if (isActive) {
       await prisma.performanceTarget.updateMany({
-        where: { isActive: true },
+        where: { 
+          isActive: true,
+          role: role
+        },
         data: { isActive: false }
       })
     }
 
     const target = await prisma.performanceTarget.create({
       data: {
-        name: name || 'Default Target',
+        name,
+        role,
+        level: level ? parseInt(level) : null,
         excellentThreshold: parseInt(excellentThreshold) || 225,
         goodThreshold: parseInt(goodThreshold) || 170,
         needsImprovementThreshold: parseInt(needsImprovementThreshold) || 120,

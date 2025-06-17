@@ -103,9 +103,12 @@ export default function Dashboard() {
       console.log(`🎯 Dashboard received ${targetsData.length} targets`)
       console.log(`⚖️ Dashboard received ${weightsData.length} role weights`)
 
-      // Transform logs to prevent React error #31
+      // Transform logs to prevent React error #31 and filter out logs with missing categories
       const transformedLogs = Array.isArray(rawLogs) 
-        ? rawLogs.map(transformWeeklyLog).filter(log => log !== null)
+        ? rawLogs
+            .filter(log => log.category) // Filter out logs with missing categories
+            .map(transformWeeklyLog)
+            .filter(log => log !== null)
         : []
       
       console.log(`✅ Dashboard transformed ${transformedLogs.length} logs successfully`)

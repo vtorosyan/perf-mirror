@@ -21,6 +21,8 @@ const transformRoleWeights = (rawWeights: any): any => {
   return {
     id: safeValue(rawWeights.id),
     name: safeValue(rawWeights.name),
+    role: safeValue(rawWeights.role),
+    level: safeValue(rawWeights.level) ? parseInt(safeValue(rawWeights.level)) : null,
     inputWeight: parseFloat(safeValue(rawWeights.inputWeight)) || 0,
     outputWeight: parseFloat(safeValue(rawWeights.outputWeight)) || 0,
     outcomeWeight: parseFloat(safeValue(rawWeights.outcomeWeight)) || 0,
@@ -31,7 +33,7 @@ const transformRoleWeights = (rawWeights: any): any => {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const requestId = Math.random().toString(36).substring(7)
   console.log(`🌐 [${requestId}] GET /api/role-weights - Request started`)
   console.log(`🔍 [${requestId}] Environment:`, {
@@ -42,13 +44,31 @@ export async function GET() {
   })
   
   try {
-    console.log(`📞 [${requestId}] Calling prisma.roleWeights.findMany()...`)
+    const { searchParams } = new URL(request.url)
+    const role = searchParams.get('role')
+    const level = searchParams.get('level')
+    
+    console.log(`📞 [${requestId}] Calling prisma.roleWeights.findMany() with filters:`, { role, level })
     console.log(`🔍 [${requestId}] Prisma client type:`, typeof prisma)
     console.log(`🔍 [${requestId}] Prisma roleWeights type:`, typeof prisma.roleWeights)
     console.log(`🔍 [${requestId}] Prisma roleWeights.findMany type:`, typeof prisma.roleWeights?.findMany)
     
+    // Build where clause based on query parameters
+    const whereClause: any = {}
+    if (role) {
+      whereClause.role = role
+    }
+    if (level) {
+      whereClause.level = parseInt(level)
+    }
+    
     const weights = await prisma.roleWeights.findMany({
-      orderBy: { createdAt: 'asc' }
+      where: Object.keys(whereClause).length > 0 ? whereClause : undefined,
+      orderBy: [
+        { role: 'asc' },
+        { level: 'asc' },
+        { createdAt: 'asc' }
+      ]
     })
     
     console.log(`✅ [${requestId}] Successfully fetched role weights:`, weights.length, 'records')
@@ -89,6 +109,8 @@ export async function POST(request: NextRequest) {
     
     const { 
       name,
+      role,
+      level,
       inputWeight,
       outputWeight,
       outcomeWeight,
@@ -96,10 +118,16 @@ export async function POST(request: NextRequest) {
       isActive 
     } = body
 
-    if (!name || inputWeight === undefined || outputWeight === undefined || 
+    if (!name || !role || inputWeight === undefined || outputWeight === undefined || 
         outcomeWeight === undefined || impactWeight === undefined) {
       console.log(`❌ [${requestId}] Validation failed: Missing fields`)
-      return NextResponse.json({ error: 'All fields are required', requestId }, { status: 400 })
+      return NextResponse.json({ error: 'Name, role, and all weights are required', requestId }, { status: 400 })
+    }
+
+    // Validate role
+    if (!['IC', 'Manager'].includes(role)) {
+      console.log(`❌ [${requestId}] Validation failed: Invalid role`)
+      return NextResponse.json({ error: 'Role must be IC or Manager', requestId }, { status: 400 })
     }
 
     // Validate weights sum to 1.0
@@ -111,11 +139,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Weights must sum to 1.0', requestId }, { status: 400 })
     }
 
-    // Deactivate other weights if this one is active
+    // Deactivate other weights for the same role if this one is active
     if (isActive) {
-      console.log(`📝 [${requestId}] Deactivating other role weights...`)
+      console.log(`📝 [${requestId}] Deactivating other role weights for ${role}...`)
       await prisma.roleWeights.updateMany({
-        where: { isActive: true },
+        where: { 
+          isActive: true,
+          role: role
+        },
         data: { isActive: false }
       })
     }
@@ -124,6 +155,8 @@ export async function POST(request: NextRequest) {
     const weights = await prisma.roleWeights.create({
       data: {
         name,
+        role,
+        level: level ? parseInt(level) : null,
         inputWeight: parseFloat(inputWeight),
         outputWeight: parseFloat(outputWeight),
         outcomeWeight: parseFloat(outcomeWeight),
