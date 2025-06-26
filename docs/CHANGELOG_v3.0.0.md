@@ -2,6 +2,29 @@
 
 ## 🎯 Major Features
 
+### 🧠 Enhanced Smart Insights & Growth Suggestions
+
+**Revolutionary career guidance system that analyzes role-level performance alignment**
+
+- **Expectation Coverage Analysis**: Automatically analyzes how well your current work aligns with role-level expectations
+- **Evidence Classification**: Categorizes expectations as Consistently Evidenced (🌟), Evidenced (✅), or Not Yet Evidenced (⚠️)
+- **Growth Suggestions**: Provides specific, actionable advice for advancing to the next career level
+- **Keyword Matching Algorithm**: Uses deterministic keyword extraction and category matching (no AI/NLP required)
+- **Role-Aware Recommendations**: Tailored suggestions for IC, Manager, Senior Manager, and Director roles
+- **IOOI-Aligned Guidance**: Recommendations aligned with Input, Output, Outcome, and Impact dimensions
+
+**Example Output:**
+```
+🧭 Expectation Coverage (IC L4):
+• ✅ Participates in architecture reviews → Active in 2 weeks recently
+• 🌟 Completes features independently → Active in 4 weeks recently  
+• ⚠️ Leads design discussions → Try logging work in: Technical Leadership
+
+🚀 Growth Suggestions (Next Level: IC L5):
+• 🌟 Already mentoring others — keep going!
+• ⚠️ No technical strategy work → Contribute to roadmap discussions
+```
+
 ### 5-Band Performance Evaluation System
 
 **Old System (3 bands):**

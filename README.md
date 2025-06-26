@@ -362,4 +362,73 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**Built with ❤️ for engineering teams who believe in data-driven performance tracking.** 
+**Built with ❤️ for engineering teams who believe in data-driven performance tracking.**
+
+## 🧠 Enhanced Smart Insights & Growth Suggestions
+
+PerfMirror v3.0 introduces intelligent role-level performance insights that help users understand how their work aligns with expectations and identify growth opportunities.
+
+### Smart Insights Algorithm
+
+The Enhanced Smart Insights system analyzes your performance data across multiple dimensions:
+
+#### 1. **Expectation Coverage Analysis (Current Level)**
+- **Data Source**: Matches your logged work activities against role-level expectations defined in the system
+- **Analysis Period**: Last 4 weeks of activity data
+- **Matching Logic**: 
+  - Extracts keywords from expectation text (removes common words like "should", "must", "the")
+  - Matches expectations to work categories using category names and descriptions
+  - Supports partial matching and semantic similarity
+
+#### 2. **Evidence Classification**
+Your current level expectations are classified as:
+- **🌟 Consistently Evidenced**: Activity logged in 3+ recent weeks
+- **✅ Evidenced**: Some activity logged in matching categories
+- **⚠️ Not Yet Evidenced**: No related activity found
+
+#### 3. **Growth Suggestions (Next Level)**
+- **Forward-Looking Analysis**: Examines expectations for your next career level
+- **Gap Identification**: Compares current activity patterns against next-level requirements
+- **Status Classification**:
+  - **🌟 Emerging Strength**: Already showing some activity in next-level areas
+  - **⚠️ Growth Area**: No current evidence of next-level capabilities
+
+#### 4. **Actionable Recommendations**
+The system generates contextual suggestions based on:
+- **Role-Specific Guidance**: Tailored advice for IC, Manager, Senior Manager, Director roles
+- **Category-Based Actions**: Specific work types to focus on (mentoring, architecture, strategy)
+- **Dimension Alignment**: Recommendations aligned with IOOI framework (Input, Output, Outcome, Impact)
+
+### Example Smart Insights Output
+
+```
+🧭 Expectation Coverage (IC L4):
+• ✅ Participates in architecture reviews → Active in 1 week recently
+• 🌟 Completes features independently → Active in 4 weeks recently  
+• ⚠️ Leads design discussions → Try logging work in: Technical Leadership, Design Reviews
+
+🚀 Growth Suggestions (Next Level: IC L5):
+• 🌟 Mentoring junior developers — Great start! Keep building on your mentoring work.
+• ⚠️ Technical strategy contribution → Engage in strategic planning sessions or contribute to technical roadmap discussions
+• ⚠️ Cross-team coordination → Take on cross-team projects or coordinate with other engineering teams
+```
+
+### Algorithm Benefits
+
+- **No AI/NLP Dependency**: Uses deterministic keyword matching and category alignment
+- **Transparent Logic**: Clear, explainable matching rules
+- **Real-Time Feedback**: Updates automatically as you log work
+- **Career Guidance**: Provides specific, actionable advice for career progression
+- **Role Awareness**: Understands different expectations across roles and levels
+
+### Configuration
+
+Smart Insights requires:
+1. **User Profile**: Active role and level configuration
+2. **Level Expectations**: Defined expectations for current and next levels
+3. **Category Templates**: Work categories mapped to role levels and IOOI dimensions
+4. **Activity Data**: Recent work logs to analyze against expectations
+
+The system gracefully handles missing data and provides helpful fallback suggestions when specific matching rules don't apply.
+
+## 🎯 Performance Evaluation System 

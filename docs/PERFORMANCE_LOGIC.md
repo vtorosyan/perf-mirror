@@ -480,3 +480,297 @@ The system analyzes your IOOI distribution to identify patterns:
 
 - **[IOOI Framework Deep Dive](https://vtorosyan.github.io/performance-reviews-quantification/)
 - **[IOOI Framework for Managers](https://vtorosyan.github.io/engineering-manager-performance/)**
+
+## Enhanced Smart Insights Algorithm
+
+PerfMirror v3.0 introduces an intelligent expectation analysis system that provides role-level performance insights and growth suggestions. This system uses deterministic algorithms to match user activity against role expectations.
+
+### Algorithm Overview
+
+The Smart Insights system consists of four main components:
+
+1. **Expectation Coverage Analysis** - Analyzes current level performance
+2. **Growth Suggestion Engine** - Identifies next level opportunities  
+3. **Keyword Matching System** - Maps expectations to work categories
+4. **Contextual Recommendation Generator** - Provides actionable advice
+
+### 1. Expectation Coverage Analysis
+
+#### Data Sources
+```typescript
+interface AnalysisInput {
+  userProfile: { role: string, level: number }
+  currentLevelExpectations: string[] // JSON array of expectations
+  weeklyLogs: WeeklyLog[] // Last 4 weeks of activity
+  categoryTemplates: CategoryTemplate[] // Role-level work categories
+}
+```
+
+#### Matching Algorithm
+```typescript
+function analyzeExpectations(expectation: string, templates: CategoryTemplate[]) {
+  // 1. Extract keywords from expectation
+  const keywords = extractKeywords(expectation)
+  
+  // 2. Find matching categories
+  const matches = templates.filter(template => {
+    const templateName = template.categoryName.toLowerCase()
+    const templateDesc = template.description?.toLowerCase() || ''
+    
+    return keywords.some(keyword => 
+      templateName.includes(keyword) || 
+      templateDesc.includes(keyword) ||
+      keyword.includes(templateName.split(' ')[0]) // Partial matching
+    )
+  })
+  
+  return matches
+}
+```
+
+#### Keyword Extraction
+```typescript
+function extractKeywords(text: string): string[] {
+  const commonWords = ['should', 'must', 'can', 'will', 'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by']
+  
+  return text
+    .split(/\s+/)
+    .map(word => word.replace(/[^\w]/g, ''))
+    .filter(word => word.length > 2 && !commonWords.includes(word))
+    .slice(0, 5) // Limit to most important keywords
+}
+```
+
+#### Evidence Classification
+```typescript
+function classifyEvidence(matchingCategories: string[], weeklyLogs: WeeklyLog[]): {
+  status: 'consistent' | 'evidenced' | 'not_evidenced'
+  weeksCovered: number
+} {
+  const categoryActivity = matchingCategories.map(categoryName => {
+    const relevantLogs = weeklyLogs.filter(log => 
+      log.category.name.toLowerCase().includes(categoryName.toLowerCase()) ||
+      categoryName.toLowerCase().includes(log.category.name.toLowerCase())
+    )
+    
+    const weeksWithActivity = new Set(
+      relevantLogs.filter(log => log.count > 0).map(log => log.week)
+    ).size
+    
+    return weeksWithActivity
+  })
+  
+  const maxWeeks = Math.max(...categoryActivity, 0)
+  const hasActivity = categoryActivity.some(weeks => weeks > 0)
+  
+  if (maxWeeks >= 3) return { status: 'consistent', weeksCovered: maxWeeks }
+  if (hasActivity) return { status: 'evidenced', weeksCovered: maxWeeks }
+  return { status: 'not_evidenced', weeksCovered: 0 }
+}
+```
+
+### 2. Growth Suggestion Engine
+
+#### Next Level Analysis
+```typescript
+function generateGrowthSuggestions(
+  nextLevelExpectations: string[],
+  currentActivity: WeeklyLog[],
+  nextLevelTemplates: CategoryTemplate[],
+  userProfile: UserProfile
+): GrowthSuggestion[] {
+  return nextLevelExpectations.map(expectation => {
+    const matchingCategories = findMatchingCategories(expectation, nextLevelTemplates)
+    
+    // Check for existing activity in next-level areas
+    const hasCurrentActivity = matchingCategories.some(template => {
+      return currentActivity.some(log => 
+        (log.category.name.toLowerCase().includes(template.categoryName.toLowerCase()) ||
+         template.categoryName.toLowerCase().includes(log.category.name.toLowerCase())) &&
+        log.count > 0
+      )
+    })
+    
+    const status = hasCurrentActivity ? 'emerging' : 'missing'
+    const suggestion = generateSuggestionText(expectation, matchingCategories, status, userProfile)
+    
+    return { expectation, status, suggestion, recommendedCategories: matchingCategories.map(t => t.categoryName) }
+  })
+}
+```
+
+### 3. Contextual Recommendation Generator
+
+#### Suggestion Rules Engine
+```typescript
+function generateSuggestionText(
+  expectation: string,
+  categories: CategoryTemplate[],
+  status: 'emerging' | 'missing',
+  profile: UserProfile
+): string {
+  if (status === 'emerging') {
+    return categories.length > 0 
+      ? `Great start! Keep building on your ${categories[0].categoryName.toLowerCase()} work to strengthen this area.`
+      : `You're showing early signs of this capability — keep developing it!`
+  }
+  
+  // Missing capability - provide specific guidance
+  if (categories.length > 0) {
+    return getSuggestionsByCategory(categories[0].categoryName, categories[0].dimension)
+  }
+  
+  // Fallback suggestions based on expectation content
+  return getExpectationBasedSuggestion(expectation)
+}
+```
+
+#### Category-Based Suggestions
+```typescript
+function getSuggestionsByCategory(categoryName: string, dimension: string): string {
+  const categoryLower = categoryName.toLowerCase()
+  
+  if (categoryLower.includes('mentor')) {
+    return 'Start by mentoring junior developers, reviewing their code, or helping with onboarding.'
+  } else if (categoryLower.includes('design') || categoryLower.includes('architecture')) {
+    return 'Propose design improvements, lead architecture discussions, or write technical RFCs.'
+  } else if (categoryLower.includes('strategy')) {
+    return 'Contribute to technical strategy discussions and long-term planning initiatives.'
+  }
+  
+  // Dimension-based fallbacks
+  switch (dimension) {
+    case 'input': return 'Seek out more learning opportunities and knowledge sharing in this area.'
+    case 'output': return 'Focus on delivering concrete results and measurable outcomes.'
+    case 'outcome': return 'Work on initiatives that drive team or product success metrics.'
+    case 'impact': return 'Look for opportunities to influence broader organizational goals.'
+    default: return 'Develop this capability through relevant projects and focused practice.'
+  }
+}
+```
+
+### 4. Algorithm Configuration
+
+#### Required Data Structures
+```typescript
+interface LevelExpectation {
+  id: string
+  role: string // 'IC', 'Manager', 'Senior Manager', 'Director'
+  level: number // 1-6 for IC, 1-4 for Manager, etc.
+  expectations: string // JSON array of natural language expectations
+}
+
+interface CategoryTemplate {
+  id: string
+  role: string
+  level: number
+  categoryName: string
+  dimension: 'input' | 'output' | 'outcome' | 'impact'
+  scorePerOccurrence: number
+  expectedWeeklyCount: number
+  description?: string
+}
+```
+
+#### Example Expectations Data
+```json
+{
+  "role": "IC",
+  "level": 4,
+  "expectations": [
+    "Should participate in architecture reviews and provide technical input",
+    "Must complete features independently with minimal guidance",
+    "Should mentor junior team members when opportunities arise",
+    "Must contribute to technical documentation and knowledge sharing"
+  ]
+}
+```
+
+#### Example Category Templates
+```json
+[
+  {
+    "role": "IC",
+    "level": 4,
+    "categoryName": "Architecture Reviews",
+    "dimension": "input",
+    "description": "Reviewing and approving architectural decisions",
+    "expectedWeeklyCount": 2
+  },
+  {
+    "role": "IC", 
+    "level": 5,
+    "categoryName": "Technical Mentoring",
+    "dimension": "outcome",
+    "description": "Mentoring junior developers and providing guidance",
+    "expectedWeeklyCount": 3
+  }
+]
+```
+
+### 5. Performance Characteristics
+
+#### Time Complexity
+- **Keyword Extraction**: O(n) where n is expectation text length
+- **Category Matching**: O(m × k) where m is categories, k is keywords
+- **Activity Analysis**: O(w × c) where w is weeks, c is categories
+- **Overall**: O(e × (m × k + w × c)) where e is expectations
+
+#### Memory Usage
+- Processes data in streaming fashion
+- Maintains minimal state between analyses
+- Scales linearly with number of expectations and categories
+
+#### Error Handling
+```typescript
+function analyzeExpectationsWithFallback(expectations: string): ExpectationAnalysis[] {
+  try {
+    const parsed = JSON.parse(expectations)
+    return Array.isArray(parsed) ? parsed.map(analyzeExpectation) : []
+  } catch (error) {
+    console.error('Error parsing expectations:', error)
+    return [] // Graceful degradation
+  }
+}
+```
+
+### 6. Extensibility
+
+#### Adding New Matching Rules
+```typescript
+// Custom matchers can be added to the matching pipeline
+interface CustomMatcher {
+  name: string
+  match: (expectation: string, template: CategoryTemplate) => boolean
+  priority: number
+}
+
+const customMatchers: CustomMatcher[] = [
+  {
+    name: 'exact_match',
+    match: (exp, template) => exp.toLowerCase().includes(template.categoryName.toLowerCase()),
+    priority: 1
+  },
+  {
+    name: 'semantic_similarity', 
+    match: (exp, template) => calculateSimilarity(exp, template.description) > 0.7,
+    priority: 2
+  }
+]
+```
+
+#### Role-Specific Customization
+```typescript
+function getRoleSpecificSuggestions(role: string, expectation: string): string {
+  const roleStrategies = {
+    'IC': generateICStrategies,
+    'Manager': generateManagerStrategies,
+    'Senior Manager': generateSeniorManagerStrategies,
+    'Director': generateDirectorStrategies
+  }
+  
+  return roleStrategies[role]?.(expectation) || getGenericSuggestion(expectation)
+}
+```
+
+This algorithm provides transparent, deterministic insights that help users understand their current performance alignment and identify specific areas for career growth, all without requiring AI or machine learning dependencies.
