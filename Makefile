@@ -70,6 +70,10 @@ db-reset: ## Reset database (WARNING: This will delete all data!)
 	rm -f prisma/dev.db
 	npx prisma db push
 
+db-update-production: ## Update production database schema (Turso)
+	@echo "🔧 Updating production database schema..."
+	node scripts/ensure-production-schema.js
+
 # =============================================================================
 # Docker Operations
 # =============================================================================

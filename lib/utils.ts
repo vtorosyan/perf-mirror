@@ -181,4 +181,202 @@ export function generateInsights(dimensionScores: DimensionScore, weights: RoleW
   insights.push(`Primary focus area: ${getDimensionLabel(strongest)} (${percentages[strongest as keyof typeof percentages].toFixed(0)}% of activity)`)
   
   return insights
+}
+
+// Enhanced evaluation types and functions for role-level system
+export interface CategoryExpectation {
+  categoryName: string
+  dimension: string
+  expectedWeeklyCount: number
+  scorePerOccurrence: number
+}
+
+export interface PerformanceComparison {
+  categoryName: string
+  dimension: string
+  actual: number
+  expected: number
+  actualScore: number
+  expectedScore: number
+  performance: 'over' | 'met' | 'under' | 'none'
+}
+
+export interface PerformanceBandResult {
+  band: 'Outstanding' | 'Strong Performance' | 'Meeting Expectations' | 'Partially Meeting Expectations' | 'Underperforming' | 'No Data'
+  percentage: number
+  totalActual: number
+  totalExpected: number
+  categoriesOverPerforming: number
+  categoriesMeeting: number
+  categoriesUnderPerforming: number
+  categoriesNoActivity: number
+}
+
+export function calculatePerformanceComparison(
+  actualLogs: any[],
+  expectations: CategoryExpectation[]
+): PerformanceComparison[] {
+  const comparisons: PerformanceComparison[] = []
+  
+  expectations.forEach(expectation => {
+    const actualLog = actualLogs.find(log => 
+      log.category && log.category.name === expectation.categoryName
+    )
+    
+    const actualCount = actualLog ? Number(safeValue(actualLog.count)) || 0 : 0
+    const actualScore = actualLog 
+      ? (actualLog.overrideScore !== undefined 
+          ? Number(safeValue(actualLog.overrideScore)) 
+          : actualCount * Number(safeValue(actualLog.category?.scorePerOccurrence || 0)))
+      : 0
+    
+    const expectedScore = expectation.expectedWeeklyCount * expectation.scorePerOccurrence
+    
+    let performance: 'over' | 'met' | 'under' | 'none' = 'none'
+    if (actualCount === 0) {
+      performance = 'none'
+    } else if (actualCount >= expectation.expectedWeeklyCount * 1.15) {
+      performance = 'over'
+    } else if (actualCount >= expectation.expectedWeeklyCount * 0.85) {
+      performance = 'met'
+    } else {
+      performance = 'under'
+    }
+    
+    comparisons.push({
+      categoryName: expectation.categoryName,
+      dimension: expectation.dimension,
+      actual: actualCount,
+      expected: expectation.expectedWeeklyCount,
+      actualScore,
+      expectedScore,
+      performance
+    })
+  })
+  
+  return comparisons
+}
+
+export function calculatePerformanceBand(comparisons: PerformanceComparison[]): PerformanceBandResult {
+  if (comparisons.length === 0) {
+    return {
+      band: 'No Data',
+      percentage: 0,
+      totalActual: 0,
+      totalExpected: 0,
+      categoriesOverPerforming: 0,
+      categoriesMeeting: 0,
+      categoriesUnderPerforming: 0,
+      categoriesNoActivity: 0
+    }
+  }
+  
+  const totalActual = comparisons.reduce((sum, comp) => sum + comp.actualScore, 0)
+  const totalExpected = comparisons.reduce((sum, comp) => sum + comp.expectedScore, 0)
+  
+  const categoriesOverPerforming = comparisons.filter(c => c.performance === 'over').length
+  const categoriesMeeting = comparisons.filter(c => c.performance === 'met').length
+  const categoriesUnderPerforming = comparisons.filter(c => c.performance === 'under').length
+  const categoriesNoActivity = comparisons.filter(c => c.performance === 'none').length
+  
+  const percentage = totalExpected > 0 ? (totalActual / totalExpected) * 100 : 0
+  
+  let band: PerformanceBandResult['band'] = 'No Data'
+  
+  if (totalActual === 0) {
+    band = 'No Data'
+  } else if (percentage >= 150) {
+    band = 'Outstanding'
+  } else if (percentage >= 115) {
+    band = 'Strong Performance'
+  } else if (percentage >= 85) {
+    band = 'Meeting Expectations'
+  } else if (percentage >= 70) {
+    band = 'Partially Meeting Expectations'
+  } else {
+    band = 'Underperforming'
+  }
+  
+  return {
+    band,
+    percentage,
+    totalActual,
+    totalExpected,
+    categoriesOverPerforming,
+    categoriesMeeting,
+    categoriesUnderPerforming,
+    categoriesNoActivity
+  }
+}
+
+export function getPerformanceBandColor(band: PerformanceBandResult['band']): string {
+  switch (band) {
+    case 'Outstanding': return 'bg-green-100 text-green-800 border-green-300'
+    case 'Strong Performance': return 'bg-blue-100 text-blue-800 border-blue-300'
+    case 'Meeting Expectations': return 'bg-gray-100 text-gray-800 border-gray-300'
+    case 'Partially Meeting Expectations': return 'bg-yellow-100 text-yellow-800 border-yellow-300'
+    case 'Underperforming': return 'bg-red-100 text-red-800 border-red-300'
+    default: return 'bg-gray-100 text-gray-600 border-gray-300'
+  }
+}
+
+export function generateEnhancedInsights(
+  comparisons: PerformanceComparison[],
+  performanceBand: PerformanceBandResult,
+  userProfile?: { role: string; level: number }
+): string[] {
+  const insights: string[] = []
+  
+  if (comparisons.length === 0) {
+    insights.push('Set up your role and level to get personalized insights')
+    return insights
+  }
+  
+  // Overall performance insight
+  if (performanceBand.band === 'Outstanding') {
+    insights.push(`Exceptional performance! You're achieving ${performanceBand.percentage.toFixed(0)}% of expected activity levels.`)
+  } else if (performanceBand.band === 'Strong Performance') {
+    insights.push(`Strong performance at ${performanceBand.percentage.toFixed(0)}% of expected levels. You're exceeding expectations in key areas.`)
+  } else if (performanceBand.band === 'Meeting Expectations') {
+    insights.push(`Good work! You're meeting expectations at ${performanceBand.percentage.toFixed(0)}% of expected activity levels.`)
+  } else if (performanceBand.band === 'Partially Meeting Expectations') {
+    insights.push(`Some areas need attention. You're at ${performanceBand.percentage.toFixed(0)}% of expected levels with mixed performance across categories.`)
+  } else if (performanceBand.band === 'Underperforming') {
+    insights.push(`Focus needed: you're at ${performanceBand.percentage.toFixed(0)}% of expected levels. Consider prioritizing key activities.`)
+  }
+  
+  // Category-specific insights
+  if (performanceBand.categoriesOverPerforming > 0) {
+    const overPerformingCategories = comparisons.filter(c => c.performance === 'over').map(c => c.categoryName)
+    insights.push(`Excelling in: ${overPerformingCategories.slice(0, 3).join(', ')}${overPerformingCategories.length > 3 ? ' and others' : ''}`)
+  }
+  
+  if (performanceBand.categoriesUnderPerforming > 0) {
+    const underPerformingCategories = comparisons.filter(c => c.performance === 'under').map(c => c.categoryName)
+    insights.push(`Consider increasing: ${underPerformingCategories.slice(0, 3).join(', ')}${underPerformingCategories.length > 3 ? ' and others' : ''}`)
+  }
+  
+  if (performanceBand.categoriesNoActivity > 0) {
+    const noActivityCategories = comparisons.filter(c => c.performance === 'none').map(c => c.categoryName)
+    insights.push(`No activity logged for: ${noActivityCategories.slice(0, 3).join(', ')}${noActivityCategories.length > 3 ? ' and others' : ''}`)
+  }
+  
+  // Role-specific insights
+  if (userProfile) {
+    if (userProfile.role === 'IC' && userProfile.level >= 5) {
+      const impactActivities = comparisons.filter(c => c.dimension === 'impact')
+      if (impactActivities.some(a => a.performance === 'under' || a.performance === 'none')) {
+        insights.push('As a senior IC, consider increasing focus on high-impact activities that drive strategic outcomes.')
+      }
+    }
+    
+    if (userProfile.role === 'Manager') {
+      const inputActivities = comparisons.filter(c => c.dimension === 'input')
+      if (inputActivities.some(a => a.performance === 'under' || a.performance === 'none')) {
+        insights.push('As a manager, ensure you\'re maintaining regular input activities like 1:1s and team development.')
+      }
+    }
+  }
+  
+  return insights
 } 

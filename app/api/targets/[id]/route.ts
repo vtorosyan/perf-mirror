@@ -10,18 +10,44 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    
-    // If setting this target as active, deactivate others first
-    if (body.isActive) {
+    const { 
+      name,
+      role,
+      level,
+      outstandingThreshold,
+      strongThreshold,
+      meetingThreshold,
+      partialThreshold,
+      underperformingThreshold,
+      timePeriodWeeks,
+      isActive 
+    } = body
+
+    // Deactivate other targets if this one is being activated
+    if (isActive) {
       await prisma.performanceTarget.updateMany({
-        where: { isActive: true },
+        where: { 
+          isActive: true,
+          id: { not: params.id }  // Exclude the current target from deactivation
+        },
         data: { isActive: false }
       })
     }
 
     const target = await prisma.performanceTarget.update({
       where: { id: params.id },
-      data: body
+      data: {
+        ...(name && { name }),
+        ...(role && { role }),
+        ...(level !== undefined && { level: level ? parseInt(level) : null }),
+        ...(outstandingThreshold !== undefined && { outstandingThreshold: parseInt(outstandingThreshold) }),
+        ...(strongThreshold !== undefined && { strongThreshold: parseInt(strongThreshold) }),
+        ...(meetingThreshold !== undefined && { meetingThreshold: parseInt(meetingThreshold) }),
+        ...(partialThreshold !== undefined && { partialThreshold: parseInt(partialThreshold) }),
+        ...(underperformingThreshold !== undefined && { underperformingThreshold: parseInt(underperformingThreshold) }),
+        ...(timePeriodWeeks !== undefined && { timePeriodWeeks: parseInt(timePeriodWeeks) }),
+        ...(isActive !== undefined && { isActive })
+      }
     })
 
     return NextResponse.json(target)

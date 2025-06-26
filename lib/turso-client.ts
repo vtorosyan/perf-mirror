@@ -11,6 +11,8 @@ interface TursoResponse {
 interface DatabaseRecord {
   id: string
   name: string
+  role?: string
+  level?: number
   inputWeight: number
   outputWeight: number
   outcomeWeight: number
@@ -22,6 +24,8 @@ interface DatabaseRecord {
 
 interface CreateRoleWeightData {
   name: string
+  role?: string
+  level?: number
   inputWeight: number
   outputWeight: number
   outcomeWeight: number
@@ -136,7 +140,7 @@ class TursoHttpClient {
   }
 
   async findManyRoleWeights(): Promise<DatabaseRecord[]> {
-    const sql = 'SELECT ID as id, NAME as name, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights ORDER BY CREATEDAT ASC'
+    const sql = 'SELECT ID as id, NAME as name, ROLE as role, LEVEL as level, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights ORDER BY ROLE ASC, LEVEL ASC, CREATEDAT ASC'
     
     try {
       console.log('🔍 findManyRoleWeights: Fetching role weights from Turso...')
@@ -241,12 +245,14 @@ class TursoHttpClient {
     const now = new Date().toISOString()
     
     // First insert the record - using uppercase column names
-    const insertSql = `INSERT INTO RoleWeights (ID, NAME, INPUTWEIGHT, OUTPUTWEIGHT, OUTCOMEWEIGHT, IMPACTWEIGHT, ISACTIVE, CREATEDAT, UPDATEDAT) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    const insertSql = `INSERT INTO RoleWeights (ID, NAME, ROLE, LEVEL, INPUTWEIGHT, OUTPUTWEIGHT, OUTCOMEWEIGHT, IMPACTWEIGHT, ISACTIVE, CREATEDAT, UPDATEDAT) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     
     const insertParams = [
       id,
       data.name,
+      data.role || null,
+      data.level || null,
       data.inputWeight,
       data.outputWeight,
       data.outcomeWeight,
@@ -270,7 +276,7 @@ class TursoHttpClient {
       console.log('✅ createRoleWeight: Record inserted, now fetching it back...')
       
       // Now fetch the created record - using uppercase column names with aliases
-      const selectSql = 'SELECT ID as id, NAME as name, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights WHERE ID = ?'
+      const selectSql = 'SELECT ID as id, NAME as name, ROLE as role, LEVEL as level, INPUTWEIGHT as inputWeight, OUTPUTWEIGHT as outputWeight, OUTCOMEWEIGHT as outcomeWeight, IMPACTWEIGHT as impactWeight, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM RoleWeights WHERE ID = ?'
       const selectResult = await this.executeQuery(selectSql, [id])
       
       if (selectResult.error) {
@@ -312,7 +318,7 @@ class TursoHttpClient {
   }
 
   async findManyTargets(): Promise<any[]> {
-    const sql = 'SELECT id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget ORDER BY createdAt DESC'
+    const sql = 'SELECT id, name, role, level, outstandingThreshold, strongThreshold, meetingThreshold, partialThreshold, underperformingThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget ORDER BY role ASC, level ASC, createdAt DESC'
     
     try {
       console.log('🔍 findManyTargets: Fetching targets from Turso...')
@@ -410,16 +416,16 @@ class TursoHttpClient {
   }
 
   async findManyWeeklyLogs(weekFilter?: string[]): Promise<any[]> {
-    let sql = 'SELECT id, categoryId, week, count, overrideScore, createdAt FROM WeeklyLog'
+    let sql = 'SELECT wl.id, wl.categoryId, wl.week, wl.count, wl.overrideScore, wl.reference, wl.createdAt, c.id as cat_id, c.name as cat_name, c.scorePerOccurrence as cat_scorePerOccurrence, c.dimension as cat_dimension, c.description as cat_description, c.createdAt as cat_createdAt, c.updatedAt as cat_updatedAt FROM WeeklyLog wl LEFT JOIN Category c ON wl.categoryId = c.id'
     let params: any[] = []
     
     if (weekFilter && weekFilter.length > 0) {
       const placeholders = weekFilter.map(() => '?').join(',')
-      sql += ` WHERE week IN (${placeholders})`
+      sql += ` WHERE wl.week IN (${placeholders})`
       params = weekFilter
     }
     
-    sql += ' ORDER BY week DESC'
+    sql += ' ORDER BY wl.week DESC'
     
     try {
       console.log('🔍 findManyWeeklyLogs: Fetching weekly logs from Turso...')
@@ -452,15 +458,37 @@ class TursoHttpClient {
             ? cellValue.value 
             : cellValue
         })
+        
+        // Transform to match Prisma structure with nested category
+        const transformedRecord = {
+          id: record.id,
+          categoryId: record.categoryId,
+          week: record.week,
+          count: parseInt(record.count) || 0,
+          overrideScore: record.overrideScore ? parseInt(record.overrideScore) : null,
+          reference: record.reference || null,
+          createdAt: record.createdAt,
+          category: record.cat_id ? {
+            id: record.cat_id,
+            name: record.cat_name,
+            scorePerOccurrence: parseInt(record.cat_scorePerOccurrence) || 0,
+            dimension: record.cat_dimension,
+            description: record.cat_description,
+            createdAt: record.cat_createdAt,
+            updatedAt: record.cat_updatedAt
+          } : null
+        }
+        
         if (index < 3) { // Log first 3 records for debugging
           console.log(`📝 findManyWeeklyLogs: Record ${index + 1}:`, {
-            id: record.id,
-            week: record.week,
-            categoryId: record.categoryId,
-            count: record.count
+            id: transformedRecord.id,
+            week: transformedRecord.week,
+            categoryId: transformedRecord.categoryId,
+            count: transformedRecord.count,
+            hasCategory: !!transformedRecord.category
           })
         }
-        return record
+        return transformedRecord
       })
       
       console.log('✅ findManyWeeklyLogs: Weekly logs fetched successfully:', records.length)
@@ -534,15 +562,19 @@ class TursoHttpClient {
     const id = this.generateId()
     const now = new Date().toISOString()
     
-    const insertSql = `INSERT INTO PerformanceTarget (id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt) 
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    const insertSql = `INSERT INTO PerformanceTarget (id, name, role, level, outstandingThreshold, strongThreshold, meetingThreshold, partialThreshold, underperformingThreshold, timePeriodWeeks, isActive, createdAt, updatedAt) 
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     
     const insertParams = [
       id,
       data.name,
-      data.excellentThreshold,
-      data.goodThreshold,
-      data.needsImprovementThreshold,
+      data.role,
+      data.level,
+      data.outstandingThreshold,
+      data.strongThreshold,
+      data.meetingThreshold,
+      data.partialThreshold,
+      data.underperformingThreshold,
       data.timePeriodWeeks,
       data.isActive ? 1 : 0,
       now,
@@ -561,7 +593,7 @@ class TursoHttpClient {
 
       console.log('✅ createTarget: Record inserted, now fetching it back...')
       
-      const selectSql = 'SELECT id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget WHERE id = ?'
+      const selectSql = 'SELECT id, name, role, level, outstandingThreshold, strongThreshold, meetingThreshold, partialThreshold, underperformingThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget WHERE id = ?'
       const selectResult = await this.executeQuery(selectSql, [id])
       
       if (selectResult.error) {
@@ -698,6 +730,14 @@ class TursoHttpClient {
         setClauses.push('NAME = ?')
         params.push(data.name)
       }
+      if (data.role !== undefined) {
+        setClauses.push('ROLE = ?')
+        params.push(data.role)
+      }
+      if (data.level !== undefined) {
+        setClauses.push('LEVEL = ?')
+        params.push(data.level)
+      }
       if (data.inputWeight !== undefined) {
         setClauses.push('INPUTWEIGHT = ?')
         params.push(data.inputWeight.toString())
@@ -739,6 +779,8 @@ class TursoHttpClient {
       const selectSql = `SELECT 
         ID as id,
         NAME as name,
+        ROLE as role,
+        LEVEL as level,
         INPUTWEIGHT as inputWeight,
         OUTPUTWEIGHT as outputWeight,
         OUTCOMEWEIGHT as outcomeWeight,
@@ -795,17 +837,33 @@ class TursoHttpClient {
         setClauses.push('name = ?')
         params.push(data.name)
       }
-      if (data.excellentThreshold !== undefined) {
-        setClauses.push('excellentThreshold = ?')
-        params.push(data.excellentThreshold)
+      if (data.role !== undefined) {
+        setClauses.push('role = ?')
+        params.push(data.role)
       }
-      if (data.goodThreshold !== undefined) {
-        setClauses.push('goodThreshold = ?')
-        params.push(data.goodThreshold)
+      if (data.level !== undefined) {
+        setClauses.push('level = ?')
+        params.push(data.level)
       }
-      if (data.needsImprovementThreshold !== undefined) {
-        setClauses.push('needsImprovementThreshold = ?')
-        params.push(data.needsImprovementThreshold)
+      if (data.outstandingThreshold !== undefined) {
+        setClauses.push('outstandingThreshold = ?')
+        params.push(data.outstandingThreshold)
+      }
+      if (data.strongThreshold !== undefined) {
+        setClauses.push('strongThreshold = ?')
+        params.push(data.strongThreshold)
+      }
+      if (data.meetingThreshold !== undefined) {
+        setClauses.push('meetingThreshold = ?')
+        params.push(data.meetingThreshold)
+      }
+      if (data.partialThreshold !== undefined) {
+        setClauses.push('partialThreshold = ?')
+        params.push(data.partialThreshold)
+      }
+      if (data.underperformingThreshold !== undefined) {
+        setClauses.push('underperformingThreshold = ?')
+        params.push(data.underperformingThreshold)
       }
       if (data.timePeriodWeeks !== undefined) {
         setClauses.push('timePeriodWeeks = ?')
@@ -832,7 +890,7 @@ class TursoHttpClient {
       }
       
       // Fetch and return the updated record
-      const selectSql = 'SELECT id, name, excellentThreshold, goodThreshold, needsImprovementThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget WHERE id = ?'
+      const selectSql = 'SELECT id, name, role, level, outstandingThreshold, strongThreshold, meetingThreshold, partialThreshold, underperformingThreshold, timePeriodWeeks, isActive, createdAt, updatedAt FROM PerformanceTarget WHERE id = ?'
       const selectResult = await this.executeQuery(selectSql, [id])
       
       if (selectResult.error) {
@@ -985,7 +1043,7 @@ class TursoHttpClient {
     }
   }
 
-  async upsertWeeklyLog(data: { categoryId: string; week: string; count: number; overrideScore?: number }): Promise<any> {
+  async upsertWeeklyLog(data: { categoryId: string; week: string; count: number; overrideScore?: number; reference?: string }): Promise<any> {
     console.log('🔄 upsertWeeklyLog: Starting upsert for week:', data.week)
     console.log('📝 upsertWeeklyLog: Data:', data)
     
@@ -1003,8 +1061,8 @@ class TursoHttpClient {
       if (existingLog) {
         // Update existing log
         console.log('📝 upsertWeeklyLog: Updating existing log')
-        const updateSql = 'UPDATE WeeklyLog SET count = ?, overrideScore = ? WHERE categoryId = ? AND week = ?'
-        const updateParams = [data.count, data.overrideScore || null, data.categoryId, data.week]
+        const updateSql = 'UPDATE WeeklyLog SET count = ?, overrideScore = ?, reference = ? WHERE categoryId = ? AND week = ?'
+        const updateParams = [data.count, data.overrideScore || null, data.reference || null, data.categoryId, data.week]
         
         const updateResult = await this.executeQuery(updateSql, updateParams)
         if (updateResult.error) {
@@ -1014,8 +1072,8 @@ class TursoHttpClient {
         // Create new log
         console.log('📝 upsertWeeklyLog: Creating new log')
         const id = this.generateId()
-        const insertSql = 'INSERT INTO WeeklyLog (id, categoryId, week, count, overrideScore, createdAt) VALUES (?, ?, ?, ?, ?, ?)'
-        const insertParams = [id, data.categoryId, data.week, data.count, data.overrideScore || null, new Date().toISOString()]
+        const insertSql = 'INSERT INTO WeeklyLog (id, categoryId, week, count, overrideScore, reference, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        const insertParams = [id, data.categoryId, data.week, data.count, data.overrideScore || null, data.reference || null, new Date().toISOString()]
         
         const insertResult = await this.executeQuery(insertSql, insertParams)
         if (insertResult.error) {
@@ -1024,7 +1082,7 @@ class TursoHttpClient {
       }
       
       // Fetch and return the final record
-      const selectSql = 'SELECT id, categoryId, week, count, overrideScore, createdAt FROM WeeklyLog WHERE categoryId = ? AND week = ?'
+      const selectSql = 'SELECT id, categoryId, week, count, overrideScore, reference, createdAt FROM WeeklyLog WHERE categoryId = ? AND week = ?'
       const selectResult = await this.executeQuery(selectSql, [data.categoryId, data.week])
       
       if (selectResult.error) {
@@ -1049,6 +1107,184 @@ class TursoHttpClient {
       return record
     } catch (error) {
       console.error('❌ upsertWeeklyLog: Error upserting weekly log in Turso:', error)
+      throw error
+    }
+  }
+
+  async findManyCategoryTemplates(filters?: { role?: string; level?: number }): Promise<any[]> {
+    console.log('🔍 findManyCategoryTemplates: Fetching category templates from Turso...')
+    console.log('📝 findManyCategoryTemplates: Filters:', filters)
+    
+    try {
+      const conditions: string[] = []
+      const params: any[] = []
+      
+      if (filters?.role) {
+        conditions.push('role = ?')
+        params.push(filters.role)
+      }
+      
+      if (filters?.level !== undefined) {
+        conditions.push('level = ?')
+        params.push(filters.level)
+      }
+      
+      const whereClause = conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''
+      const sql = `SELECT id, role, level, categoryName, dimension, scorePerOccurrence, expectedWeeklyCount, description, createdAt, updatedAt FROM CategoryTemplate ${whereClause} ORDER BY dimension ASC, categoryName ASC`
+      
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (!result.results || !result.results[0]) {
+        console.log('📭 findManyCategoryTemplates: No category templates found')
+        return []
+      }
+
+      const { columns, rows } = result.results[0]
+      console.log('📊 findManyCategoryTemplates: Processing', rows.length, 'rows with', columns.length, 'columns')
+      
+      const records = rows.map((row, index) => {
+        const record: any = {}
+        columns.forEach((col, colIndex) => {
+          const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+          const cellValue = row[colIndex]
+          record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+            ? cellValue.value 
+            : cellValue
+        })
+        
+        // Convert level to number
+        if (record.level !== undefined) {
+          record.level = parseInt(record.level)
+        }
+        
+        // Convert scorePerOccurrence to number
+        if (record.scorePerOccurrence !== undefined) {
+          record.scorePerOccurrence = parseInt(record.scorePerOccurrence)
+        }
+        
+        // Convert expectedWeeklyCount to number
+        if (record.expectedWeeklyCount !== undefined) {
+          record.expectedWeeklyCount = parseFloat(record.expectedWeeklyCount)
+        }
+        
+        return record
+      })
+      
+      console.log('✅ findManyCategoryTemplates: Category templates fetched successfully:', records.length)
+      return records
+    } catch (error) {
+      console.error('❌ findManyCategoryTemplates: Error fetching category templates from Turso:', error)
+      return []
+    }
+  }
+
+  async upsertCategoryTemplate(data: {
+    role: string;
+    level: number;
+    categoryName: string;
+    dimension: string;
+    scorePerOccurrence: number;
+    expectedWeeklyCount: number;
+    description?: string;
+  }): Promise<any> {
+    console.log('🔄 upsertCategoryTemplate: Starting upsert for template:', data.categoryName)
+    console.log('📝 upsertCategoryTemplate: Data:', data)
+    
+    try {
+      // First, try to find existing template
+      const checkSql = 'SELECT id FROM CategoryTemplate WHERE role = ? AND level = ? AND categoryName = ?'
+      const checkResult = await this.executeQuery(checkSql, [data.role, data.level, data.categoryName])
+      
+      if (checkResult.error) {
+        throw new Error(checkResult.error)
+      }
+
+      const existingTemplate = checkResult.results?.[0]?.rows?.[0]
+      
+      if (existingTemplate) {
+        // Update existing template
+        console.log('📝 upsertCategoryTemplate: Updating existing template')
+        const updateSql = 'UPDATE CategoryTemplate SET dimension = ?, scorePerOccurrence = ?, expectedWeeklyCount = ?, description = ?, updatedAt = ? WHERE role = ? AND level = ? AND categoryName = ?'
+        const updateParams = [
+          data.dimension,
+          data.scorePerOccurrence,
+          data.expectedWeeklyCount,
+          data.description || null,
+          new Date().toISOString(),
+          data.role,
+          data.level,
+          data.categoryName
+        ]
+        
+        const updateResult = await this.executeQuery(updateSql, updateParams)
+        if (updateResult.error) {
+          throw new Error(updateResult.error)
+        }
+      } else {
+        // Create new template
+        console.log('📝 upsertCategoryTemplate: Creating new template')
+        const id = this.generateId()
+        const insertSql = 'INSERT INTO CategoryTemplate (id, role, level, categoryName, dimension, scorePerOccurrence, expectedWeeklyCount, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        const insertParams = [
+          id,
+          data.role,
+          data.level,
+          data.categoryName,
+          data.dimension,
+          data.scorePerOccurrence,
+          data.expectedWeeklyCount,
+          data.description || null,
+          new Date().toISOString(),
+          new Date().toISOString()
+        ]
+        
+        const insertResult = await this.executeQuery(insertSql, insertParams)
+        if (insertResult.error) {
+          throw new Error(insertResult.error)
+        }
+      }
+      
+      // Fetch and return the final record
+      const selectSql = 'SELECT id, role, level, categoryName, dimension, scorePerOccurrence, expectedWeeklyCount, description, createdAt, updatedAt FROM CategoryTemplate WHERE role = ? AND level = ? AND categoryName = ?'
+      const selectResult = await this.executeQuery(selectSql, [data.role, data.level, data.categoryName])
+      
+      if (selectResult.error) {
+        throw new Error(selectResult.error)
+      }
+
+      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
+        throw new Error('Category template not found after upsert')
+      }
+      
+      const { columns, rows } = selectResult.results[0]
+      const record: any = {}
+      columns.forEach((col, colIndex) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][colIndex]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      // Convert types
+      if (record.level !== undefined) {
+        record.level = parseInt(record.level)
+      }
+      if (record.scorePerOccurrence !== undefined) {
+        record.scorePerOccurrence = parseInt(record.scorePerOccurrence)
+      }
+      if (record.expectedWeeklyCount !== undefined) {
+        record.expectedWeeklyCount = parseFloat(record.expectedWeeklyCount)
+      }
+      
+      console.log('✅ upsertCategoryTemplate: Successfully upserted category template:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ upsertCategoryTemplate: Error upserting category template in Turso:', error)
       throw error
     }
   }

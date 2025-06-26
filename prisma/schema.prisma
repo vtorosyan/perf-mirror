@@ -28,6 +28,7 @@ model WeeklyLog {
   week       String   // Format: "2024-W01"
   count      Int
   overrideScore Int?   // Optional override for calculated score
+  reference  String?  // Optional reference (URL, ticket number, etc.)
   createdAt  DateTime @default(now())
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 
@@ -36,19 +37,27 @@ model WeeklyLog {
 
 model PerformanceTarget {
   id                    String   @id @default(cuid())
-  name                  String   @default("Default Target")
-  excellentThreshold    Int      @default(225)
-  goodThreshold         Int      @default(170)
-  needsImprovementThreshold Int  @default(120)
+  name                  String   // "IC Performance Target", "Senior Manager Target", etc.
+  role                  String   // "IC" or "Manager"
+  level                 Int?     // Level number (optional - null means applies to all levels of that role)
+  outstandingThreshold  Int      @default(300)  // Outstanding (>150% baseline)
+  strongThreshold       Int      @default(230)  // Strong Performance (115-150% baseline)
+  meetingThreshold      Int      @default(170)  // Meeting Expectations (85-115% baseline)
+  partialThreshold      Int      @default(140)  // Partially Meeting Expectations (70-85% baseline)
+  underperformingThreshold Int   @default(120)  // Underperforming (<70% baseline)
   timePeriodWeeks       Int      @default(12)
-  isActive              Boolean  @default(true)
+  isActive              Boolean  @default(false)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
+  
+  @@unique([role, level, name])
 }
 
 model RoleWeights {
   id            String   @id @default(cuid())
-  name          String   @unique // "Manager", "Senior Manager", "Director", "Custom"
+  name          String   // "IC L3 Weights", "Manager L6 Weights", etc.
+  role          String   // "IC" or "Manager"
+  level         Int?     // Level number (optional - null means applies to all levels of that role)
   inputWeight   Float    @default(0.25)
   outputWeight  Float    @default(0.35)
   outcomeWeight Float    @default(0.25)
@@ -56,4 +65,41 @@ model RoleWeights {
   isActive      Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  
+  @@unique([role, level, name])
+}
+
+model UserProfile {
+  id        String   @id @default(cuid())
+  role      String   // "IC" or "Manager"
+  level     Int      // 1-8 for ICs, 4-8 for Managers
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model LevelExpectation {
+  id          String   @id @default(cuid())
+  role        String   // "IC" or "Manager"
+  level       Int      // Level number
+  expectations String  // JSON array of expectation strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@unique([role, level])
+}
+
+model CategoryTemplate {
+  id                    String   @id @default(cuid())
+  role                  String   // "IC" or "Manager"
+  level                 Int      // Level number
+  categoryName          String   
+  dimension             String   // input, output, outcome, impact
+  scorePerOccurrence    Int
+  expectedWeeklyCount   Float    // Expected average weekly count
+  description           String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  
+  @@unique([role, level, categoryName])
 } 

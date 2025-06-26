@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Plus, Pencil, Save, X, CheckCircle, RotateCcw } from 'lucide-react'
+import { Plus, Pencil, Save, X, CheckCircle, RotateCcw, Trash2 } from 'lucide-react'
 
 interface RoleWeights {
   id: string
   name: string
+  role: string
+  level: number | null
   inputWeight: number
   outputWeight: number
   outcomeWeight: number
@@ -14,18 +16,29 @@ interface RoleWeights {
   createdAt: string
 }
 
+interface UserProfile {
+  id: string
+  role: string
+  level: number
+  isActive: boolean
+}
+
 interface RoleWeightsProps {
   onDataChange?: () => void
 }
 
 export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
   const [weights, setWeights] = useState<RoleWeights[]>([])
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [showAllRoles, setShowAllRoles] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   
   const [formData, setFormData] = useState({
     name: '',
+    role: 'IC',
+    level: '',
     inputWeight: '0.25',
     outputWeight: '0.35',
     outcomeWeight: '0.25',
@@ -34,9 +47,28 @@ export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
   })
 
   useEffect(() => {
+    fetchUserProfile()
     fetchWeights()
     initializeDefaultWeights()
   }, [])
+
+  useEffect(() => {
+    fetchWeights()
+  }, [userProfile, showAllRoles])
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch('/api/user-profile')
+      if (response.ok) {
+        const profile = await response.json()
+        if (profile && profile.id) {
+          setUserProfile(profile)
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error)
+    }
+  }
 
   const initializeDefaultWeights = async () => {
     try {
@@ -50,7 +82,14 @@ export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
 
   const fetchWeights = async () => {
     try {
-      const response = await fetch('/api/role-weights')
+      // Build query parameters for role filtering
+      const params = new URLSearchParams()
+      if (!showAllRoles && userProfile?.role) {
+        params.append('role', userProfile.role)
+      }
+      
+      const url = `/api/role-weights${params.toString() ? `?${params.toString()}` : ''}`
+      const response = await fetch(url)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
@@ -127,6 +166,8 @@ export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
     setEditingId(roleWeights.id)
     setFormData({
       name: roleWeights.name,
+      role: roleWeights.role,
+      level: roleWeights.level ? roleWeights.level.toString() : '',
       inputWeight: roleWeights.inputWeight.toString(),
       outputWeight: roleWeights.outputWeight.toString(),
       outcomeWeight: roleWeights.outcomeWeight.toString(),
@@ -161,9 +202,38 @@ export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
     }
   }
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete these role weights? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/role-weights/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (response.ok) {
+        await fetchWeights()
+        
+        // Notify parent component that data has changed
+        if (onDataChange) {
+          onDataChange()
+        }
+      } else {
+        const error = await response.json()
+        alert(error.error || 'Failed to delete role weights')
+      }
+    } catch (error) {
+      console.error('Error deleting role weights:', error)
+      alert('Failed to delete role weights')
+    }
+  }
+
   const resetForm = () => {
     setFormData({
       name: '',
+      role: 'IC',
+      level: '',
       inputWeight: '0.25',
       outputWeight: '0.35',
       outcomeWeight: '0.25',
@@ -444,6 +514,14 @@ export default function RoleWeights({ onDataChange }: RoleWeightsProps) {
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
+                  {!roleWeights.isActive && (
+                    <button
+                      onClick={() => handleDelete(roleWeights.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

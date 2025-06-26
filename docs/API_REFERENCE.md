@@ -148,7 +148,7 @@ Content-Type: application/json
 
 ## Performance Targets
 
-Manage performance thresholds and goals.
+Manage role-level performance thresholds with 5-band evaluation system.
 
 ### List Targets
 
@@ -161,10 +161,14 @@ GET /api/targets
 [
   {
     "id": "clh7x5i0o0003u3h4xs4o9q7r",
-    "name": "Q1 2024 Performance Target",
-    "excellentThreshold": 225,
-    "goodThreshold": 170,
-    "needsImprovementThreshold": 120,
+    "name": "Senior Engineer L4 Target",
+    "role": "IC",
+    "level": 4,
+    "outstandingThreshold": 300,
+    "strongThreshold": 230,
+    "meetingThreshold": 170,
+    "partialThreshold": 140,
+    "underperformingThreshold": 120,
     "timePeriodWeeks": 12,
     "isActive": true,
     "createdAt": "2024-06-12T10:45:00.000Z",
@@ -180,10 +184,14 @@ POST /api/targets
 Content-Type: application/json
 
 {
-  "name": "Q2 2024 Target",
-  "excellentThreshold": 250,
-  "goodThreshold": 180,
-  "needsImprovementThreshold": 130,
+  "name": "Manager L2 Target",
+  "role": "Manager",
+  "level": 2,
+  "outstandingThreshold": 320,
+  "strongThreshold": 250,
+  "meetingThreshold": 180,
+  "partialThreshold": 150,
+  "underperformingThreshold": 120,
   "timePeriodWeeks": 12,
   "isActive": false
 }
@@ -191,10 +199,14 @@ Content-Type: application/json
 
 **Validation:**
 - `name`: Required, 1-100 characters
-- `excellentThreshold`: Required, positive number
-- `goodThreshold`: Required, positive number, less than excellent
-- `needsImprovementThreshold`: Required, positive number, less than good
-- `timePeriodWeeks`: Required, positive integer
+- `role`: Optional, one of: `IC`, `Manager`, `Senior Manager`, `Director`
+- `level`: Optional, positive integer (1-6 for IC, 1-4 for Manager, etc.)
+- `outstandingThreshold`: Required, positive number
+- `strongThreshold`: Required, positive number, less than outstanding
+- `meetingThreshold`: Required, positive number, less than strong
+- `partialThreshold`: Required, positive number, less than meeting
+- `underperformingThreshold`: Required, positive number, less than partial
+- `timePeriodWeeks`: Required, positive integer (1-52)
 - `isActive`: Boolean, defaults to false
 
 ### Update Target
@@ -214,9 +226,80 @@ Content-Type: application/json
 DELETE /api/targets/{id}
 ```
 
+## Level Expectations
+
+Manage role and level specific expectations for performance evaluation.
+
+### List Level Expectations
+
+```http
+GET /api/level-expectations?role=IC&level=4
+```
+
+**Query Parameters:**
+- `role`: Optional, filter by role ("IC", "Manager", "Senior Manager", "Director")
+- `level`: Optional, filter by level (positive integer)
+
+**Response:**
+```json
+[
+  {
+    "id": "clh7x6j1p0004u3h4yt5p0r8s",
+    "role": "IC",
+    "level": 4,
+    "expectation": "Leads technical design for medium to large complexity projects",
+    "createdAt": "2024-06-12T10:50:00.000Z",
+    "updatedAt": "2024-06-12T10:50:00.000Z"
+  },
+  {
+    "id": "clh7x7k2q0005u3h4zu6q1s9t",
+    "role": "IC",
+    "level": 4,
+    "expectation": "Mentors junior and mid-level engineers, providing technical guidance",
+    "createdAt": "2024-06-12T10:51:00.000Z",
+    "updatedAt": "2024-06-12T10:51:00.000Z"
+  }
+]
+```
+
+### Create Level Expectation
+
+```http
+POST /api/level-expectations
+Content-Type: application/json
+
+{
+  "role": "IC",
+  "level": 4,
+  "expectation": "Contributes to architectural decisions within team and adjacent team scope"
+}
+```
+
+**Validation:**
+- `role`: Required, one of: `IC`, `Manager`, `Senior Manager`, `Director`
+- `level`: Required, positive integer
+- `expectation`: Required, 1-1000 characters
+
+### Update Level Expectation
+
+```http
+PUT /api/level-expectations/{id}
+Content-Type: application/json
+
+{
+  "expectation": "Leads architectural decisions for complex cross-team projects"
+}
+```
+
+### Delete Level Expectation
+
+```http
+DELETE /api/level-expectations/{id}
+```
+
 ## Role Weights
 
-Manage IOOI dimension weights for different roles.
+Manage IOOI dimension weights for different roles and levels.
 
 ### List Role Weights
 
@@ -475,9 +558,13 @@ For reference, the key data models:
 {
   id: string;
   name: string;
-  excellentThreshold: number;
-  goodThreshold: number;
-  needsImprovementThreshold: number;
+  role?: string;
+  level?: number;
+  outstandingThreshold: number;
+  strongThreshold: number;
+  meetingThreshold: number;
+  partialThreshold: number;
+  underperformingThreshold: number;
   timePeriodWeeks: number;
   isActive: boolean;
   createdAt: Date;
@@ -488,6 +575,8 @@ For reference, the key data models:
 {
   id: string;
   name: string;
+  role?: string;
+  level?: number;
   inputWeight: number;
   outputWeight: number;
   outcomeWeight: number;
@@ -496,4 +585,218 @@ For reference, the key data models:
   createdAt: Date;
   updatedAt: Date;
 }
-``` 
+
+// LevelExpectation
+{
+  id: string;
+  role: string;
+  level: number;
+  expectation: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+```
+
+## Smart Insights Integration
+
+The Dashboard component integrates with multiple APIs to provide Enhanced Smart Insights functionality:
+
+### Smart Insights Data Flow
+
+```typescript
+// 1. Fetch user profile
+const userProfile = await fetch('/api/user-profile')
+
+// 2. Fetch current and next level expectations
+const currentExpectations = await fetch(`/api/level-expectations?role=${role}&level=${level}`)
+const nextExpectations = await fetch(`/api/level-expectations?role=${role}&level=${level + 1}`)
+
+// 3. Fetch category templates for both levels
+const currentTemplates = await fetch(`/api/category-templates?role=${role}&level=${level}`)
+const nextTemplates = await fetch(`/api/category-templates?role=${role}&level=${level + 1}`)
+
+// 4. Analyze recent activity logs
+const weeklyLogs = await fetch(`/api/weekly-logs?weeks=${recentWeeks.join(',')}`)
+```
+
+### Smart Insights Interfaces
+
+#### ExpectationAnalysis
+```typescript
+interface ExpectationAnalysis {
+  expectation: string                    // Natural language expectation text
+  status: 'evidenced' | 'consistent' | 'not_evidenced'  // Evidence level
+  matchingCategories: string[]          // Categories that match this expectation
+  weeksCovered: number                  // Number of weeks with activity
+}
+```
+
+#### GrowthSuggestion
+```typescript
+interface GrowthSuggestion {
+  expectation: string                   // Next level expectation
+  status: 'emerging' | 'missing'       // Current evidence status
+  suggestion: string                    // Actionable advice text
+  recommendedCategories: string[]       // Categories to focus on
+}
+```
+
+#### Smart Insights Response Example
+```json
+{
+  "currentLevelAnalysis": [
+    {
+      "expectation": "Should participate in architecture reviews",
+      "status": "evidenced",
+      "matchingCategories": ["Architecture Reviews", "Technical Design"],
+      "weeksCovered": 2
+    },
+    {
+      "expectation": "Must complete features independently",
+      "status": "consistent", 
+      "matchingCategories": ["Feature Development", "Independent Work"],
+      "weeksCovered": 4
+    },
+    {
+      "expectation": "Should mentor junior developers",
+      "status": "not_evidenced",
+      "matchingCategories": ["Mentoring", "Knowledge Transfer"],
+      "weeksCovered": 0
+    }
+  ],
+  "growthSuggestions": [
+    {
+      "expectation": "Should lead technical initiatives",
+      "status": "emerging",
+      "suggestion": "Great start! Keep building on your technical leadership work to strengthen this area.",
+      "recommendedCategories": ["Technical Leadership", "Project Management"]
+    },
+    {
+      "expectation": "Must contribute to technical strategy",
+      "status": "missing",
+      "suggestion": "Engage in strategic planning sessions or contribute to technical roadmap discussions.",
+      "recommendedCategories": ["Technical Strategy", "Architecture Planning"]
+    }
+  ]
+}
+```
+
+### Smart Insights Algorithm Parameters
+
+#### Keyword Extraction Rules
+- **Minimum Word Length**: 3 characters
+- **Stop Words**: Common words like "should", "must", "the", "and" are filtered out
+- **Maximum Keywords**: Limited to 5 most relevant keywords per expectation
+- **Word Processing**: Punctuation removed, case-insensitive matching
+
+#### Evidence Classification Thresholds
+- **Consistent Evidence**: 3+ weeks of activity in matching categories
+- **Basic Evidence**: 1+ weeks of activity in matching categories  
+- **No Evidence**: 0 weeks of activity in matching categories
+
+#### Matching Algorithm
+- **Exact Match**: Category name contains expectation keyword
+- **Description Match**: Category description contains expectation keyword
+- **Partial Match**: Keyword contains first word of category name
+- **Case Insensitive**: All matching is case-insensitive
+
+#### Suggestion Generation Rules
+
+##### Role-Specific Strategies
+```typescript
+const roleStrategies = {
+  'IC': {
+    'mentor': 'Start by mentoring junior developers or helping with onboarding',
+    'design': 'Propose design improvements or write technical RFCs',
+    'strategy': 'Contribute to technical roadmap discussions'
+  },
+  'Manager': {
+    'mentor': 'Develop formal mentoring programs and career development plans',
+    'design': 'Lead architectural decision-making and system design',
+    'strategy': 'Drive technical strategy alignment across teams'
+  }
+}
+```
+
+##### Dimension-Based Fallbacks
+```typescript
+const dimensionStrategies = {
+  'input': 'Seek out more learning opportunities and knowledge sharing',
+  'output': 'Focus on delivering concrete results and measurable outcomes', 
+  'outcome': 'Work on initiatives that drive team or product success metrics',
+  'impact': 'Look for opportunities to influence broader organizational goals'
+}
+```
+
+### Performance Considerations
+
+#### Caching Strategy
+- **User Profile**: Cached for session duration
+- **Level Expectations**: Cached until role/level changes
+- **Category Templates**: Cached until role/level changes
+- **Weekly Logs**: Real-time, no caching
+
+#### Error Handling
+- **Missing Expectations**: Graceful degradation with empty analysis
+- **Invalid JSON**: Falls back to empty expectations array
+- **API Failures**: Shows cached data or helpful error messages
+- **Malformed Data**: Filters out invalid entries automatically
+
+#### Scalability
+- **Time Complexity**: O(e × (m × k + w × c)) where:
+  - e = number of expectations
+  - m = number of category templates  
+  - k = number of keywords per expectation
+  - w = number of weeks analyzed
+  - c = number of categories with activity
+- **Memory Usage**: Linear with input data size
+- **Network Requests**: Batched and parallelized where possible
+
+### Integration Examples
+
+#### Frontend Component Usage
+```typescript
+// In Dashboard component
+const analyzeCurrentLevelExpectations = (): ExpectationAnalysis[] => {
+  if (!currentLevelExpectations || !currentLevelTemplates.length) return []
+  
+  const evaluationPeriod = getEvaluationPeriod()
+  const periodLogs = weeklyLogs.filter(log => evaluationPeriod.weeks.includes(log.week))
+  
+  return JSON.parse(currentLevelExpectations.expectations).map(expectation => {
+    const matchingCategories = findMatchingCategories(expectation, currentLevelTemplates)
+    const evidence = classifyEvidence(matchingCategories, periodLogs)
+    
+    return {
+      expectation,
+      status: evidence.status,
+      matchingCategories: matchingCategories.map(t => t.categoryName),
+      weeksCovered: evidence.weeksCovered
+    }
+  })
+}
+```
+
+#### API Response Validation
+```typescript
+// Validate Smart Insights data
+function validateSmartInsightsData(data: any): boolean {
+  return (
+    Array.isArray(data.currentLevelAnalysis) &&
+    Array.isArray(data.growthSuggestions) &&
+    data.currentLevelAnalysis.every(isValidExpectationAnalysis) &&
+    data.growthSuggestions.every(isValidGrowthSuggestion)
+  )
+}
+
+function isValidExpectationAnalysis(analysis: any): boolean {
+  return (
+    typeof analysis.expectation === 'string' &&
+    ['evidenced', 'consistent', 'not_evidenced'].includes(analysis.status) &&
+    Array.isArray(analysis.matchingCategories) &&
+    typeof analysis.weeksCovered === 'number'
+  )
+}
+```
+
+This Smart Insights system provides actionable, role-specific career guidance while maintaining transparency and deterministic behavior. 
