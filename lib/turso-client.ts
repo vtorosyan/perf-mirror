@@ -1191,100 +1191,250 @@ class TursoHttpClient {
     expectedWeeklyCount: number;
     description?: string;
   }): Promise<any> {
-    console.log('🔄 upsertCategoryTemplate: Starting upsert for template:', data.categoryName)
-    console.log('📝 upsertCategoryTemplate: Data:', data)
+    const id = `tpl_${data.role}_${data.level}_${data.categoryName.replace(/\s+/g, '_')}_${Date.now()}`
+    
+    // Check if template exists
+    const existingCheckSql = 'SELECT ID FROM CategoryTemplate WHERE ROLE = ? AND LEVEL = ? AND CATEGORYNAME = ?'
+    const existingResult = await this.executeQuery(existingCheckSql, [data.role, data.level, data.categoryName])
+    
+    let sql: string
+    let params: any[]
+    
+    if (existingResult.results && existingResult.results[0] && existingResult.results[0].rows.length > 0) {
+      // Update existing
+      sql = `UPDATE CategoryTemplate 
+             SET DIMENSION = ?, SCOREPEROCCURRENCE = ?, EXPECTEDWEEKLYCOUNT = ?, DESCRIPTION = ?, UPDATEDAT = ? 
+             WHERE ROLE = ? AND LEVEL = ? AND CATEGORYNAME = ?`
+      params = [
+        data.dimension,
+        data.scorePerOccurrence,
+        data.expectedWeeklyCount,
+        data.description || null,
+        new Date().toISOString(),
+        data.role,
+        data.level,
+        data.categoryName
+      ]
+    } else {
+      // Create new
+      sql = `INSERT INTO CategoryTemplate (ID, ROLE, LEVEL, CATEGORYNAME, DIMENSION, SCOREPEROCCURRENCE, EXPECTEDWEEKLYCOUNT, DESCRIPTION, CREATEDAT, UPDATEDAT) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      params = [
+        id,
+        data.role,
+        data.level,
+        data.categoryName,
+        data.dimension,
+        data.scorePerOccurrence,
+        data.expectedWeeklyCount,
+        data.description || null,
+        new Date().toISOString(),
+        new Date().toISOString()
+      ]
+    }
+    
+    await this.executeQuery(sql, params)
+    
+    // Return the created/updated record
+    const selectSql = 'SELECT ID as id, ROLE as role, LEVEL as level, CATEGORYNAME as categoryName, DIMENSION as dimension, SCOREPEROCCURRENCE as scorePerOccurrence, EXPECTEDWEEKLYCOUNT as expectedWeeklyCount, DESCRIPTION as description, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM CategoryTemplate WHERE ROLE = ? AND LEVEL = ? AND CATEGORYNAME = ?'
+    const result = await this.executeQuery(selectSql, [data.role, data.level, data.categoryName])
+    
+    if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
+      throw new Error('Failed to retrieve upserted category template')
+    }
+    
+    const { columns, rows } = result.results[0]
+    const record: any = {}
+    columns.forEach((col, index) => {
+      const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+      const cellValue = rows[0][index]
+      record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+        ? cellValue.value 
+        : cellValue
+    })
+    
+    // Convert numeric fields
+    if (record.level !== undefined) {
+      record.level = parseInt(record.level)
+    }
+    if (record.scorePerOccurrence !== undefined) {
+      record.scorePerOccurrence = parseInt(record.scorePerOccurrence)
+    }
+    if (record.expectedWeeklyCount !== undefined) {
+      record.expectedWeeklyCount = parseInt(record.expectedWeeklyCount)
+    }
+    
+    return record
+  }
+
+  async findManyLevelExpectations(filters?: { role?: string; level?: number }): Promise<any[]> {
+    let sql = 'SELECT ID as id, ROLE as role, LEVEL as level, EXPECTATIONS as expectations, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM LevelExpectation'
+    const params: any[] = []
+    
+    if (filters && (filters.role || filters.level !== undefined)) {
+      const conditions: string[] = []
+      if (filters.role) {
+        conditions.push('ROLE = ?')
+        params.push(filters.role)
+      }
+      if (filters.level !== undefined) {
+        conditions.push('LEVEL = ?')
+        params.push(filters.level)
+      }
+      sql += ' WHERE ' + conditions.join(' AND ')
+    }
+    
+    sql += ' ORDER BY ROLE ASC, LEVEL ASC'
     
     try {
-      // First, try to find existing template
-      const checkSql = 'SELECT id FROM CategoryTemplate WHERE role = ? AND level = ? AND categoryName = ?'
-      const checkResult = await this.executeQuery(checkSql, [data.role, data.level, data.categoryName])
+      console.log('🔍 findManyLevelExpectations: Fetching level expectations from Turso...')
+      console.log('📝 Filters:', filters)
+      const result = await this.executeQuery(sql, params)
       
-      if (checkResult.error) {
-        throw new Error(checkResult.error)
+      if (result.error) {
+        throw new Error(result.error)
       }
 
-      const existingTemplate = checkResult.results?.[0]?.rows?.[0]
-      
-      if (existingTemplate) {
-        // Update existing template
-        console.log('📝 upsertCategoryTemplate: Updating existing template')
-        const updateSql = 'UPDATE CategoryTemplate SET dimension = ?, scorePerOccurrence = ?, expectedWeeklyCount = ?, description = ?, updatedAt = ? WHERE role = ? AND level = ? AND categoryName = ?'
-        const updateParams = [
-          data.dimension,
-          data.scorePerOccurrence,
-          data.expectedWeeklyCount,
-          data.description || null,
-          new Date().toISOString(),
-          data.role,
-          data.level,
-          data.categoryName
-        ]
-        
-        const updateResult = await this.executeQuery(updateSql, updateParams)
-        if (updateResult.error) {
-          throw new Error(updateResult.error)
-        }
-      } else {
-        // Create new template
-        console.log('📝 upsertCategoryTemplate: Creating new template')
-        const id = this.generateId()
-        const insertSql = 'INSERT INTO CategoryTemplate (id, role, level, categoryName, dimension, scorePerOccurrence, expectedWeeklyCount, description, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        const insertParams = [
-          id,
-          data.role,
-          data.level,
-          data.categoryName,
-          data.dimension,
-          data.scorePerOccurrence,
-          data.expectedWeeklyCount,
-          data.description || null,
-          new Date().toISOString(),
-          new Date().toISOString()
-        ]
-        
-        const insertResult = await this.executeQuery(insertSql, insertParams)
-        if (insertResult.error) {
-          throw new Error(insertResult.error)
-        }
-      }
-      
-      // Fetch and return the final record
-      const selectSql = 'SELECT id, role, level, categoryName, dimension, scorePerOccurrence, expectedWeeklyCount, description, createdAt, updatedAt FROM CategoryTemplate WHERE role = ? AND level = ? AND categoryName = ?'
-      const selectResult = await this.executeQuery(selectSql, [data.role, data.level, data.categoryName])
-      
-      if (selectResult.error) {
-        throw new Error(selectResult.error)
+      if (!result.results || !result.results[0]) {
+        console.log('📭 findManyLevelExpectations: No level expectations found')
+        return []
       }
 
-      if (!selectResult.results || !selectResult.results[0] || selectResult.results[0].rows.length === 0) {
-        throw new Error('Category template not found after upsert')
-      }
+      const { columns, rows } = result.results[0]
+      console.log('📊 findManyLevelExpectations: Processing', rows.length, 'rows')
       
-      const { columns, rows } = selectResult.results[0]
+      const records = rows.map(row => {
+        const record: any = {}
+        columns.forEach((col, index) => {
+          const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+          const cellValue = row[index]
+          record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+            ? cellValue.value 
+            : cellValue
+        })
+        
+        // Convert numeric fields
+        if (record.level !== undefined) {
+          record.level = parseInt(record.level)
+        }
+        
+        return record
+      })
+      
+      console.log('✅ findManyLevelExpectations: Level expectations fetched successfully:', records.length)
+      return records
+    } catch (error) {
+      console.error('❌ findManyLevelExpectations: Error fetching level expectations from Turso:', error)
+      return []
+    }
+  }
+
+  async findFirstLevelExpectation(filters: { role: string; level: number }): Promise<any | null> {
+    const sql = 'SELECT ID as id, ROLE as role, LEVEL as level, EXPECTATIONS as expectations, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM LevelExpectation WHERE ROLE = ? AND LEVEL = ? LIMIT 1'
+    
+    try {
+      console.log('🔍 findFirstLevelExpectation: Fetching level expectation from Turso...')
+      console.log('📝 Filters:', filters)
+      const result = await this.executeQuery(sql, [filters.role, filters.level])
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
+        console.log('📭 findFirstLevelExpectation: No level expectation found')
+        return null
+      }
+
+      const { columns, rows } = result.results[0]
       const record: any = {}
-      columns.forEach((col, colIndex) => {
+      columns.forEach((col, index) => {
         const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
-        const cellValue = rows[0][colIndex]
+        const cellValue = rows[0][index]
         record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
           ? cellValue.value 
           : cellValue
       })
       
-      // Convert types
+      // Convert numeric fields
       if (record.level !== undefined) {
         record.level = parseInt(record.level)
       }
-      if (record.scorePerOccurrence !== undefined) {
-        record.scorePerOccurrence = parseInt(record.scorePerOccurrence)
-      }
-      if (record.expectedWeeklyCount !== undefined) {
-        record.expectedWeeklyCount = parseFloat(record.expectedWeeklyCount)
-      }
       
-      console.log('✅ upsertCategoryTemplate: Successfully upserted category template:', record.id)
+      console.log('✅ findFirstLevelExpectation: Level expectation found:', record.id)
       return record
     } catch (error) {
-      console.error('❌ upsertCategoryTemplate: Error upserting category template in Turso:', error)
+      console.error('❌ findFirstLevelExpectation: Error fetching level expectation from Turso:', error)
+      return null
+    }
+  }
+
+  async createLevelExpectation(data: { role: string; level: number; expectations: string }): Promise<any> {
+    const id = this.generateId()
+    const now = new Date().toISOString()
+    
+    const sql = `INSERT INTO LevelExpectation (ID, ROLE, LEVEL, EXPECTATIONS, CREATEDAT, UPDATEDAT) 
+                 VALUES (?, ?, ?, ?, ?, ?)`
+    const params = [id, data.role, data.level, data.expectations, now, now]
+    
+    try {
+      console.log('🔍 createLevelExpectation: Creating level expectation in Turso...')
+      console.log('📝 Data:', { role: data.role, level: data.level })
+      await this.executeQuery(sql, params)
+      
+      // Return the created record
+      return {
+        id,
+        role: data.role,
+        level: data.level,
+        expectations: data.expectations,
+        createdAt: now,
+        updatedAt: now
+      }
+    } catch (error) {
+      console.error('❌ createLevelExpectation: Error creating level expectation in Turso:', error)
+      throw error
+    }
+  }
+
+  async updateLevelExpectation(id: string, data: { expectations: string }): Promise<any> {
+    const now = new Date().toISOString()
+    
+    const sql = `UPDATE LevelExpectation SET EXPECTATIONS = ?, UPDATEDAT = ? WHERE ID = ?`
+    const params = [data.expectations, now, id]
+    
+    try {
+      console.log('🔍 updateLevelExpectation: Updating level expectation in Turso...')
+      console.log('📝 ID:', id)
+      await this.executeQuery(sql, params)
+      
+      // Return the updated record
+      const selectSql = 'SELECT ID as id, ROLE as role, LEVEL as level, EXPECTATIONS as expectations, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM LevelExpectation WHERE ID = ?'
+      const result = await this.executeQuery(selectSql, [id])
+      
+      if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
+        throw new Error('Failed to retrieve updated level expectation')
+      }
+      
+      const { columns, rows } = result.results[0]
+      const record: any = {}
+      columns.forEach((col, index) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][index]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      // Convert numeric fields
+      if (record.level !== undefined) {
+        record.level = parseInt(record.level)
+      }
+      
+      console.log('✅ updateLevelExpectation: Level expectation updated successfully:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ updateLevelExpectation: Error updating level expectation in Turso:', error)
       throw error
     }
   }

@@ -1,5 +1,4 @@
-const { PrismaClient } = require('@prisma/client')
-const prisma = new PrismaClient()
+const { prisma } = require('../lib/prisma')
 
 // Level expectations for each role and level
 const levelExpectations = [
@@ -1068,8 +1067,6 @@ async function seedData() {
   } catch (error) {
     console.error('❌ Error seeding data:', error)
     throw error
-  } finally {
-    await prisma.$disconnect()
   }
 }
 

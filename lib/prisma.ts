@@ -403,6 +403,71 @@ const createHybridClient = () => {
       },
     }
     
+    hybridClient.levelExpectation = {
+      findMany: async (options?: { where?: { role?: string; level?: number }; orderBy?: any }) => {
+        console.log('📞 Hybrid client: levelExpectation.findMany() called with Turso')
+        console.log('📝 FindMany options:', options)
+        try {
+          const filters: { role?: string; level?: number } = {}
+          if (options?.where?.role) {
+            filters.role = options.where.role
+          }
+          if (options?.where?.level !== undefined) {
+            filters.level = options.where.level
+          }
+          const result = await tursoClient.findManyLevelExpectations(filters)
+          console.log('✅ Hybrid client: levelExpectation.findMany() successful:', result.length, 'expectations')
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: levelExpectation.findMany() failed:', error)
+          throw error
+        }
+      },
+      findFirst: async (options?: { where?: { role?: string; level?: number } }) => {
+        console.log('📞 Hybrid client: levelExpectation.findFirst() called with Turso')
+        console.log('📝 FindFirst options:', options)
+        try {
+          if (!options?.where?.role || options?.where?.level === undefined) {
+            console.log('❌ Hybrid client: levelExpectation.findFirst() - Missing role or level')
+            return null
+          }
+          const result = await tursoClient.findFirstLevelExpectation({
+            role: options.where.role,
+            level: options.where.level
+          })
+          console.log('✅ Hybrid client: levelExpectation.findFirst() successful:', result ? 'found' : 'not found')
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: levelExpectation.findFirst() failed:', error)
+          throw error
+        }
+      },
+      create: async (options: { data: { role: string; level: number; expectations: string } }) => {
+        console.log('📞 Hybrid client: levelExpectation.create() called with Turso')
+        console.log('📝 Create data:', options.data)
+        try {
+          const result = await tursoClient.createLevelExpectation(options.data)
+          console.log('✅ Hybrid client: levelExpectation.create() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: levelExpectation.create() failed:', error)
+          throw error
+        }
+      },
+      update: async (options: { where: { id: string }; data: { expectations: string } }) => {
+        console.log('📞 Hybrid client: levelExpectation.update() called with Turso')
+        console.log('📝 Update options:', options)
+        try {
+          const result = await tursoClient.updateLevelExpectation(options.where.id, options.data)
+          console.log('✅ Hybrid client: levelExpectation.update() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: levelExpectation.update() failed:', error)
+          throw error
+        }
+      },
+    }
+    
     return hybridClient
   }
 
