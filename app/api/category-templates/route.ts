@@ -3,11 +3,17 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 CategoryTemplate API: Starting request')
+    console.log('🌍 Environment:', process.env.NODE_ENV, process.env.VERCEL ? 'Vercel' : 'Local')
+    
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const level = searchParams.get('level')
     
+    console.log('📝 Query params:', { role, level })
+    
     if (role && level) {
+      console.log('🔍 Fetching templates for specific role/level:', role, level)
       const templates = await prisma.categoryTemplate.findMany({
         where: {
           role,
@@ -19,10 +25,13 @@ export async function GET(request: NextRequest) {
         ]
       })
       
+      console.log('✅ Found templates:', templates.length)
+      console.log('📊 First template:', templates[0] ? templates[0].categoryName : 'None')
       return NextResponse.json(templates)
     }
     
     // Return all templates if no specific role/level requested
+    console.log('🔍 Fetching all templates')
     const templates = await prisma.categoryTemplate.findMany({
       orderBy: [
         { role: 'asc' },
@@ -32,9 +41,10 @@ export async function GET(request: NextRequest) {
       ]
     })
     
+    console.log('✅ Found all templates:', templates.length)
     return NextResponse.json(templates)
   } catch (error) {
-    console.error('Error fetching category templates:', error)
+    console.error('❌ Error fetching category templates:', error)
     return NextResponse.json({ error: 'Failed to fetch category templates' }, { status: 500 })
   }
 }
