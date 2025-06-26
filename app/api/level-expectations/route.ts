@@ -8,12 +8,10 @@ export async function GET(request: NextRequest) {
     const level = searchParams.get('level')
     
     if (role && level) {
-      const expectation = await prisma.levelExpectation.findUnique({
+      const expectation = await prisma.levelExpectation.findFirst({
         where: {
-          role_level: {
-            role,
-            level: parseInt(level)
-          }
+          role,
+          level: parseInt(level)
         }
       })
       
@@ -39,22 +37,31 @@ export async function POST(request: NextRequest) {
   try {
     const { role, level, expectations } = await request.json()
     
-    const expectation = await prisma.levelExpectation.upsert({
+    // First try to find existing record
+    const existing = await prisma.levelExpectation.findFirst({
       where: {
-        role_level: {
-          role,
-          level: parseInt(level)
-        }
-      },
-      update: {
-        expectations: JSON.stringify(expectations)
-      },
-      create: {
         role,
-        level: parseInt(level),
-        expectations: JSON.stringify(expectations)
+        level: parseInt(level)
       }
     })
+    
+    let expectation
+    if (existing) {
+      expectation = await prisma.levelExpectation.update({
+        where: { id: existing.id },
+        data: {
+          expectations: JSON.stringify(expectations)
+        }
+      })
+    } else {
+      expectation = await prisma.levelExpectation.create({
+        data: {
+          role,
+          level: parseInt(level),
+          expectations: JSON.stringify(expectations)
+        }
+      })
+    }
     
     return NextResponse.json(expectation)
   } catch (error) {
