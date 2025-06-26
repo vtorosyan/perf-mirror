@@ -238,9 +238,14 @@ export default function RoleSetup({ onDataChange, onRoleSetup }: RoleSetupProps)
       })
 
       if (response.ok) {
+        // Update local state immediately
         setLevelExpectations([...editableExpectations])
         setEditingExpectations(false)
         setEditableExpectations([])
+        
+        // Also refresh the data from server to ensure consistency
+        await fetchLevelData()
+        
         alert('Level expectations saved successfully!')
       } else {
         const error = await response.json()

@@ -41,7 +41,15 @@ if ! check_database; then
     echo "📊 Creating database schema..."
     npx prisma db push --accept-data-loss
     
-    echo "✅ Database initialized successfully"
+    # Seed the database with initial data
+    echo "🌱 Seeding database with initial data..."
+    if [ -f "/app/scripts/seed-local-development.js" ]; then
+        node /app/scripts/seed-local-development.js
+    else
+        echo "⚠️  Seeding script not found, skipping..."
+    fi
+    
+    echo "✅ Database initialized and seeded successfully"
 else
     echo "✅ Database already exists and is ready"
 fi

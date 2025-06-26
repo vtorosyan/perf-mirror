@@ -107,6 +107,10 @@ docker-deploy: ## Deploy with Docker Compose (recommended)
 	@echo "🚀 Deploying with Docker Compose..."
 	@./scripts/docker-deploy.sh
 
+docker-seed: ## Seed Docker database with initial data
+	@echo "🌱 Seeding Docker database..."
+	docker-compose exec perf-mirror npm run db:seed
+
 docker-dev: ## Start development environment with Docker
 	@echo "🛠️  Starting development environment..."
 	docker-compose -f docker-compose.dev.yml up --build
@@ -227,11 +231,18 @@ setup: ## Complete setup (install + db + seed + ready to dev)
 	npm run db:seed
 	@echo "✅ Setup complete! Run 'make dev' to start developing"
 
-quick-start: ## Quick start with Docker
+quick-start: ## Quick start with Docker (includes seeding)
 	@echo "⚡ Quick start with Docker..."
 	make check-docker
 	make docker-deploy
 	@echo "✅ Application started! Visit http://localhost:3000"
+	@echo "🌱 Database will be automatically seeded on first run"
+
+docker-fresh-start: ## Clean start with Docker (rebuild + seed)
+	@echo "🔄 Fresh Docker start with seeding..."
+	make docker-clean
+	make docker-deploy
+	@echo "✅ Fresh application started with seeded data! Visit http://localhost:3000"
 
 reset-all: ## Reset everything (database + docker + builds)
 	@echo "⚠️  WARNING: This will delete ALL data and containers!"

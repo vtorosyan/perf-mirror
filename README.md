@@ -28,7 +28,26 @@ A modern web application for tracking engineering performance using the **IOOI F
 
 ## 🚀 Quick Start
 
-### Option 1: Make Commands (Recommended)
+### 🐳 Docker (Recommended - Easiest Setup)
+```bash
+# Fresh start with automatic seeding
+make docker-fresh-start
+
+# Or step by step:
+make docker-deploy    # Deploy with Docker Compose
+```
+
+**That's it!** 🎉 The application will:
+- Build and start the container
+- Create and seed the database automatically with:
+  - 🏷️ **36 Category Templates** (12 for IC, 24 for Manager across all levels)
+  - ⚖️ **15 Role Weights** (IC L1-8, Manager L4-8)
+  - 🎯 **15 Performance Targets** (role/level specific thresholds)
+  - 📋 **16 Level Expectations** (career progression guidelines)
+  - 📊 **12 Base Categories** (Input/Output/Outcome/Impact activities)
+- Be available at [http://localhost:3000](http://localhost:3000)
+
+### 🛠️ Local Development (Alternative)
 ```bash
 # Complete setup and start development
 make setup
@@ -38,24 +57,13 @@ make dev
 make help
 ```
 
-### Option 2: Manual Setup
+### ⚡ Manual Setup (If needed)
 ```bash
 npm install
 npm run db:push
 npm run db:seed
 npm run dev
 ```
-
-### Option 3: Docker
-```bash
-# Development with hot reload
-docker-compose -f docker-compose.dev.yml up
-
-# Production deployment
-docker-compose up --build
-```
-
-Open [http://localhost:3000](http://localhost:3000) to view the application.
 
 ## 🎯 Performance System
 
@@ -123,23 +131,56 @@ const weeklyScore = calculateWeightedScore({
 
 ## 🔧 Development
 
-### Make Commands
+### 🐳 Docker Commands (Recommended)
+```bash
+make docker-fresh-start  # Clean start with rebuild + seeding
+make docker-deploy       # Deploy with Docker Compose
+make docker-stop         # Stop all containers
+make docker-logs         # View container logs
+make docker-clean        # Clean containers, images, volumes
+make docker-restart      # Restart containers
+```
+
+### 🛠️ Local Development Commands
 ```bash
 make setup          # Complete project setup
 make dev           # Start development server
 make build         # Build for production
 make db-push       # Push schema changes
 make db-studio     # Open Prisma Studio
-make docker-deploy # Deploy with Docker
 make clean         # Clean artifacts
 ```
 
-### Database Management
+### 🌱 Database Management
 ```bash
 make db-seed                    # Seed local database
 make seed-category-templates    # Seed production templates
 make db-reset                   # Reset database (WARNING: deletes data)
 ```
+
+### 🔧 Troubleshooting
+
+#### Docker Issues
+```bash
+# If containers won't start
+make docker-clean && make docker-fresh-start
+
+# Check logs for errors
+make docker-logs
+
+# Verify Docker is running
+make check-docker
+```
+
+#### Database Issues
+```bash
+# Reset everything and start fresh
+make docker-clean
+make docker-fresh-start
+```
+
+#### Port Conflicts
+If port 3000 is already in use, stop the conflicting service or modify `docker-compose.yml` to use a different port.
 
 ## 🧠 Smart Insights
 
