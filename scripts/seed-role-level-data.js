@@ -981,6 +981,36 @@ async function seedData() {
   try {
     console.log('🌱 Starting to seed role-level data...')
     
+    // Ensure tables exist (for production deployments)
+    console.log('🔧 Ensuring database tables exist...')
+    try {
+      // Try to query CategoryTemplate table to see if it exists
+      await prisma.categoryTemplate.findFirst()
+      console.log('✅ CategoryTemplate table exists')
+    } catch (error) {
+      if (error.message.includes('no such table') || error.message.includes('does not exist')) {
+        console.log('⚠️ CategoryTemplate table does not exist, it should be created by schema migration')
+        // In production with Turso, tables should be created via schema sync
+        // Log the error but continue - the upsert operations will fail gracefully
+      } else {
+        console.log('⚠️ Error checking CategoryTemplate table:', error.message)
+      }
+    }
+    
+    try {
+      // Try to query LevelExpectation table to see if it exists
+      await prisma.levelExpectation.findFirst()
+      console.log('✅ LevelExpectation table exists')
+    } catch (error) {
+      if (error.message.includes('no such table') || error.message.includes('does not exist')) {
+        console.log('⚠️ LevelExpectation table does not exist, it should be created by schema migration')
+        // In production with Turso, tables should be created via schema sync
+        // Log the error but continue - the upsert operations will fail gracefully
+      } else {
+        console.log('⚠️ Error checking LevelExpectation table:', error.message)
+      }
+    }
+    
     // Seed level expectations
     console.log('📝 Seeding level expectations...')
     for (const expectation of levelExpectations) {

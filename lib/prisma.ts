@@ -339,13 +339,65 @@ const createHybridClient = () => {
             count: options.update.count || options.create.count,
             overrideScore: options.update.overrideScore !== undefined 
               ? options.update.overrideScore 
-              : options.create.overrideScore
+              : options.create.overrideScore,
+            reference: options.update.reference !== undefined 
+              ? options.update.reference 
+              : options.create.reference
           }
           const result = await tursoClient.upsertWeeklyLog(data)
           console.log('✅ Hybrid client: weeklyLog.upsert() successful:', result.id)
           return result
         } catch (error) {
           console.error('❌ Hybrid client: weeklyLog.upsert() failed:', error)
+          throw error
+        }
+      },
+    }
+    
+    hybridClient.categoryTemplate = {
+      findMany: async (options?: { where?: { role?: string; level?: number }; orderBy?: any }) => {
+        console.log('📞 Hybrid client: categoryTemplate.findMany() called with Turso')
+        console.log('📝 FindMany options:', options)
+        try {
+          const filters: { role?: string; level?: number } = {}
+          if (options?.where?.role) {
+            filters.role = options.where.role
+          }
+          if (options?.where?.level !== undefined) {
+            filters.level = options.where.level
+          }
+          const result = await tursoClient.findManyCategoryTemplates(filters)
+          console.log('✅ Hybrid client: categoryTemplate.findMany() successful:', result.length, 'templates')
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: categoryTemplate.findMany() failed:', error)
+          throw error
+        }
+      },
+      upsert: async (options: {
+        where: { role_level_categoryName: { role: string; level: number; categoryName: string } };
+        update: any;
+        create: any;
+      }) => {
+        console.log('📞 Hybrid client: categoryTemplate.upsert() called with Turso')
+        console.log('📝 Upsert options:', options)
+        try {
+          const data = {
+            role: options.where.role_level_categoryName.role,
+            level: options.where.role_level_categoryName.level,
+            categoryName: options.where.role_level_categoryName.categoryName,
+            dimension: options.update.dimension || options.create.dimension,
+            scorePerOccurrence: options.update.scorePerOccurrence || options.create.scorePerOccurrence,
+            expectedWeeklyCount: options.update.expectedWeeklyCount || options.create.expectedWeeklyCount,
+            description: options.update.description !== undefined 
+              ? options.update.description 
+              : options.create.description
+          }
+          const result = await tursoClient.upsertCategoryTemplate(data)
+          console.log('✅ Hybrid client: categoryTemplate.upsert() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: categoryTemplate.upsert() failed:', error)
           throw error
         }
       },

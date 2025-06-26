@@ -62,6 +62,7 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
   const [selectedWeek, setSelectedWeek] = useState<string>(getCurrentWeekString())
   const [logEntries, setLogEntries] = useState<LogEntry[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingWeeklyLogs, setLoadingWeeklyLogs] = useState(false)
   const [saving, setSaving] = useState(false)
   const [editingScores, setEditingScores] = useState<Record<string, boolean>>({})
 
@@ -70,8 +71,11 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
   }, [])
 
   useEffect(() => {
-    fetchWeeklyLogs()
-  }, [selectedWeek])
+    // Only fetch weekly logs if we have categories loaded
+    if (categories.length > 0) {
+      fetchWeeklyLogs()
+    }
+  }, [selectedWeek, categories.length])
 
   const fetchData = async () => {
     try {
@@ -127,18 +131,50 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
     }
   }
 
-  const fetchWeeklyLogs = async () => {
+  const fetchWeeklyLogs = async (retryCount = 0) => {
+    setLoadingWeeklyLogs(true)
     try {
       const response = await fetch(`/api/weekly-logs?weeks=${selectedWeek}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
       const logs = await response.json()
       
       console.log('🔍 Fetched logs:', logs)
+      
+      // Check if we got an error response
+      if (logs.error) {
+        throw new Error(logs.error)
+      }
+      
+      // Ensure logs is an array
+      if (!Array.isArray(logs)) {
+        console.warn('⚠️ Expected array but got:', typeof logs, logs)
+        setWeeklyLogs([])
+        return
+      }
       
       // Filter out logs with missing categories
       const validLogs = logs.filter((log: WeeklyLog) => log.category)
       setWeeklyLogs(validLogs)
       
       console.log('🔍 Valid logs:', validLogs)
+      
+      // If we have no valid logs but categories exist, this might be a fresh week
+      if (validLogs.length === 0 && categories.length > 0) {
+        console.log('📝 No existing logs for this week, initializing fresh entries')
+        // Reset to initial state for this week
+        const initialEntries = categories.map((category: Category) => ({
+          categoryId: category.id,
+          count: 0,
+          overrideScore: undefined,
+          reference: ''
+        }))
+        setLogEntries(initialEntries)
+        return
+      }
       
       // Update log entries with existing data
       setLogEntries(prevEntries => {
@@ -167,6 +203,27 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
       })
     } catch (error) {
       console.error('Error fetching weekly logs:', error)
+      
+      // Retry once if this was the first attempt and we have categories
+      if (retryCount === 0 && categories.length > 0) {
+        console.log('🔄 Retrying weekly logs fetch...')
+        setTimeout(() => fetchWeeklyLogs(1), 1000)
+        return
+      }
+      
+      // If retry failed or we don't have categories, set empty state
+      setWeeklyLogs([])
+      if (categories.length > 0) {
+        const initialEntries = categories.map((category: Category) => ({
+          categoryId: category.id,
+          count: 0,
+          overrideScore: undefined,
+          reference: ''
+        }))
+        setLogEntries(initialEntries)
+      }
+    } finally {
+      setLoadingWeeklyLogs(false)
     }
   }
 
@@ -339,7 +396,8 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
             <select
               value={selectedWeek}
               onChange={(e) => setSelectedWeek(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              disabled={loadingWeeklyLogs}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
             >
               {getAvailableWeeks().map(week => (
                 <option key={week} value={week}>
@@ -347,6 +405,9 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
                 </option>
               ))}
             </select>
+            {loadingWeeklyLogs && (
+              <div className="ml-2 animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+            )}
           </div>
           
           <button
