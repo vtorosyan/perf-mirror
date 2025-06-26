@@ -28,6 +28,7 @@ model WeeklyLog {
   week       String   // Format: "2024-W01"
   count      Int
   overrideScore Int?   // Optional override for calculated score
+  reference  String?  // Optional reference (URL, ticket number, etc.)
   createdAt  DateTime @default(now())
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
 

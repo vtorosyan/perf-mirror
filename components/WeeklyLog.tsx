@@ -40,6 +40,7 @@ interface WeeklyLog {
   week: string
   count: number
   overrideScore?: number
+  reference?: string
   category: Category
 }
 
@@ -47,6 +48,7 @@ interface LogEntry {
   categoryId: string
   count: number
   overrideScore?: number
+  reference?: string
 }
 
 interface WeeklyLogProps {
@@ -114,7 +116,8 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
       const initialEntries = transformedCategories.map((category: Category) => ({
         categoryId: category.id,
         count: 0,
-        overrideScore: undefined
+        overrideScore: undefined,
+        reference: ''
       }))
       setLogEntries(initialEntries)
     } catch (error) {
@@ -129,13 +132,17 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
       const response = await fetch(`/api/weekly-logs?weeks=${selectedWeek}`)
       const logs = await response.json()
       
+      console.log('🔍 Fetched logs:', logs)
+      
       // Filter out logs with missing categories
       const validLogs = logs.filter((log: WeeklyLog) => log.category)
       setWeeklyLogs(validLogs)
       
+      console.log('🔍 Valid logs:', validLogs)
+      
       // Update log entries with existing data
-      setLogEntries(prevEntries => 
-        prevEntries.map(entry => {
+      setLogEntries(prevEntries => {
+        const updatedEntries = prevEntries.map(entry => {
           const existingLog = validLogs.find((log: WeeklyLog) => log.categoryId === entry.categoryId)
           
           const hasOverride = existingLog && existingLog.overrideScore !== null && existingLog.overrideScore !== undefined
@@ -143,12 +150,21 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
           const updatedEntry = {
             ...entry,
             count: existingLog ? Number(existingLog.count) || 0 : 0,
-            overrideScore: hasOverride ? Number(existingLog.overrideScore) : undefined
+            overrideScore: hasOverride ? Number(existingLog.overrideScore) : undefined,
+            reference: existingLog?.reference || ''
           }
+          
+          console.log(`🔍 Mapping ${entry.categoryId}:`, {
+            existing: existingLog,
+            updated: updatedEntry
+          })
           
           return updatedEntry
         })
-      )
+        
+        console.log('🔍 Final updated entries:', updatedEntries)
+        return updatedEntries
+      })
     } catch (error) {
       console.error('Error fetching weekly logs:', error)
     }
@@ -174,6 +190,16 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
     )
   }
 
+  const handleReferenceChange = (categoryId: string, reference: string) => {
+    setLogEntries(prevEntries =>
+      prevEntries.map(entry =>
+        entry.categoryId === categoryId
+          ? { ...entry, reference: reference }
+          : entry
+      )
+    )
+  }
+
   const toggleScoreEdit = (categoryId: string) => {
     setEditingScores(prev => ({
       ...prev,
@@ -193,21 +219,28 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
             categoryId: entry.categoryId,
             week: selectedWeek,
             count: entry.count,
-            overrideScore: entry.overrideScore
+            overrideScore: entry.overrideScore,
+            reference: entry.reference && entry.reference.trim() ? entry.reference.trim() : null
           })
         })
       )
 
       const responses = await Promise.all(savePromises)
       
-      await fetchWeeklyLogs()
+      // Check if all saves were successful
+      const allSuccessful = responses.every(response => response.ok)
       
-      // Notify parent component that data has changed
-      if (onDataChange) {
-        onDataChange()
+      if (allSuccessful) {
+        console.log('✅ All saves successful, refreshing data...')
+        await fetchWeeklyLogs()
+        console.log('✅ Data refreshed')
+        alert('Weekly log saved successfully!')
+        
+        // Note: onDataChange callback removed to prevent parent component interference
+        // This ensures the UI state remains stable after saving
+      } else {
+        throw new Error('Some saves failed')
       }
-      
-      alert('Weekly log saved successfully!')
     } catch (error) {
       console.error('Error saving weekly log:', error)
       alert('Failed to save weekly log')
@@ -424,6 +457,17 @@ export default function WeeklyLog({ onDataChange }: WeeklyLogProps) {
                             {category.description && (
                               <p className="text-gray-600 mt-1 text-sm">{safeValue(category.description)}</p>
                             )}
+                            
+                            {/* Reference input field */}
+                            <div className="mt-3">
+                              <input
+                                type="text"
+                                value={entry?.reference || ''}
+                                onChange={(e) => handleReferenceChange(category.id, e.target.value)}
+                                placeholder="Optional reference (URL, ticket #, etc.)"
+                                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50 placeholder-gray-400"
+                              />
+                            </div>
                           </div>
                           
                           <div className="flex items-center space-x-4 ml-6">

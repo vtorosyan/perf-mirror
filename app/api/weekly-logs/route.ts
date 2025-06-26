@@ -24,6 +24,7 @@ const transformWeeklyLog = (rawLog: any): any => {
     week: safeValue(rawLog.week),
     count: parseInt(safeValue(rawLog.count)) || 0,
     overrideScore: rawLog.overrideScore !== null ? parseInt(safeValue(rawLog.overrideScore)) : null,
+    reference: safeValue(rawLog.reference),
     createdAt: safeValue(rawLog.createdAt),
     category: rawLog.category ? {
       id: safeValue(rawLog.category.id),
@@ -94,7 +95,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { categoryId, week, count, overrideScore } = body
+    const { categoryId, week, count, overrideScore, reference } = body
 
     if (!categoryId || !week || count === undefined) {
       return NextResponse.json({ error: 'Category ID, week, and count are required' }, { status: 400 })
@@ -109,13 +110,15 @@ export async function POST(request: NextRequest) {
       },
       update: {
         count: parseInt(count),
-        overrideScore: overrideScore ? parseInt(overrideScore) : null
+        overrideScore: overrideScore ? parseInt(overrideScore) : null,
+        reference: reference || null
       },
       create: {
         categoryId,
         week,
         count: parseInt(count),
-        overrideScore: overrideScore ? parseInt(overrideScore) : null
+        overrideScore: overrideScore ? parseInt(overrideScore) : null,
+        reference: reference || null
       },
       include: { category: true }
     })
