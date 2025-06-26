@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request: NextRequest) {
   try {
     console.log('🔍 Level expectations API called')
+    console.log('🔧 Prisma client available:', !!prisma)
+    console.log('🔧 levelExpectation method available:', !!prisma.levelExpectation)
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const level = searchParams.get('level')
