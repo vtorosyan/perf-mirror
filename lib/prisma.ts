@@ -217,6 +217,18 @@ const createHybridClient = () => {
           throw error
         }
       },
+      delete: async (options: { where: { id: string } }) => {
+        console.log('📞 Hybrid client: roleWeights.delete() called with Turso')
+        console.log('📝 Delete role weight ID:', options.where.id)
+        try {
+          await tursoClient.deleteRoleWeight(options.where.id)
+          console.log('✅ Hybrid client: roleWeights.delete() successful')
+          return { id: options.where.id }
+        } catch (error) {
+          console.error('❌ Hybrid client: roleWeights.delete() failed:', error)
+          throw error
+        }
+      },
     }
     
     hybridClient.performanceTarget = {
@@ -466,6 +478,69 @@ const createHybridClient = () => {
           throw error
         }
       },
+    }
+    
+    hybridClient.userProfile = {
+      findFirst: async (options?: { where?: { isActive?: boolean } }) => {
+        console.log('📞 Hybrid client: userProfile.findFirst() called with Turso')
+        console.log('📝 FindFirst options:', options)
+        try {
+          const filters: { isActive?: boolean } = {}
+          if (options?.where?.isActive !== undefined) {
+            filters.isActive = options.where.isActive
+          }
+          const result = await tursoClient.findFirstUserProfile(filters)
+          console.log('✅ Hybrid client: userProfile.findFirst() successful:', result ? 'found' : 'not found')
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: userProfile.findFirst() failed:', error)
+          throw error
+        }
+      },
+      create: async (options: { data: { role: string; level: number; isActive: boolean } }) => {
+        console.log('📞 Hybrid client: userProfile.create() called with Turso')
+        console.log('📝 Create data:', options.data)
+        try {
+          const result = await tursoClient.createUserProfile(options.data)
+          console.log('✅ Hybrid client: userProfile.create() successful:', result.id)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: userProfile.create() failed:', error)
+          throw error
+        }
+      },
+      updateMany: async (options: { where: any; data: any }) => {
+        console.log('📞 Hybrid client: userProfile.updateMany() called with Turso')
+        console.log('📝 UpdateMany options:', options)
+        try {
+          const result = await tursoClient.updateManyUserProfiles(options.where, options.data)
+          console.log('✅ Hybrid client: userProfile.updateMany() successful:', result.count)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: userProfile.updateMany() failed:', error)
+          throw error
+        }
+      },
+    }
+    
+    // Add $transaction method for batch operations
+    hybridClient.$transaction = async (operations: any[]) => {
+      console.log('📞 Hybrid client: $transaction() called with Turso')
+      console.log('📝 Transaction operations:', operations.length)
+      try {
+        // For Turso, we'll execute operations sequentially since it doesn't support transactions
+        // This is a simplified implementation - in a real scenario you might want to implement rollback logic
+        const results = []
+        for (const operation of operations) {
+          const result = await operation
+          results.push(result)
+        }
+        console.log('✅ Hybrid client: $transaction() successful:', results.length, 'operations')
+        return results
+      } catch (error) {
+        console.error('❌ Hybrid client: $transaction() failed:', error)
+        throw error
+      }
     }
     
     return hybridClient

@@ -663,6 +663,24 @@ class TursoHttpClient {
     }
   }
 
+  async deleteRoleWeight(id: string): Promise<void> {
+    console.log('🗑️ deleteRoleWeight: Deleting role weight with ID:', id)
+    
+    try {
+      const deleteSql = 'DELETE FROM RoleWeights WHERE ID = ?'
+      const result = await this.executeQuery(deleteSql, [id])
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      console.log('✅ deleteRoleWeight: Role weight deleted successfully')
+    } catch (error) {
+      console.error('❌ deleteRoleWeight: Error deleting role weight from Turso:', error)
+      throw error
+    }
+  }
+
   async updateManyRoleWeights(where: any, data: any): Promise<{ count: number }> {
     console.log('🔄 updateManyRoleWeights: Starting bulk update')
     console.log('📝 updateManyRoleWeights: Where:', where, 'Data:', data)
@@ -1435,6 +1453,140 @@ class TursoHttpClient {
       return record
     } catch (error) {
       console.error('❌ updateLevelExpectation: Error updating level expectation in Turso:', error)
+      throw error
+    }
+  }
+
+  async findFirstUserProfile(filters?: { isActive?: boolean }): Promise<any | null> {
+    let sql = 'SELECT ID as id, ROLE as role, LEVEL as level, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM UserProfile'
+    const params: any[] = []
+    
+    if (filters && filters.isActive !== undefined) {
+      sql += ' WHERE ISACTIVE = ?'
+      params.push(filters.isActive ? 1 : 0)
+    }
+    
+    sql += ' ORDER BY CREATEDAT DESC LIMIT 1'
+    
+    try {
+      console.log('🔍 findFirstUserProfile: Fetching user profile from Turso...')
+      console.log('📝 Filters:', filters)
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      if (!result.results || !result.results[0] || result.results[0].rows.length === 0) {
+        console.log('📭 findFirstUserProfile: No user profile found')
+        return null
+      }
+
+      const { columns, rows } = result.results[0]
+      const record: any = {}
+      columns.forEach((col, index) => {
+        const columnName = (typeof col === 'object' && col && 'name' in col) ? (col as any).name : col
+        const cellValue = rows[0][index]
+        record[columnName] = (typeof cellValue === 'object' && cellValue && 'value' in cellValue) 
+          ? cellValue.value 
+          : cellValue
+      })
+      
+      // Convert fields
+      if (record.level !== undefined) {
+        record.level = parseInt(record.level)
+      }
+      if (record.isActive !== undefined) {
+        record.isActive = record.isActive === '1' || record.isActive === 1
+      }
+      
+      console.log('✅ findFirstUserProfile: User profile found:', record.id)
+      return record
+    } catch (error) {
+      console.error('❌ findFirstUserProfile: Error fetching user profile from Turso:', error)
+      return null
+    }
+  }
+
+  async createUserProfile(data: { role: string; level: number; isActive: boolean }): Promise<any> {
+    const id = this.generateId()
+    const now = new Date().toISOString()
+    
+    const sql = `INSERT INTO UserProfile (ID, ROLE, LEVEL, ISACTIVE, CREATEDAT, UPDATEDAT) 
+                 VALUES (?, ?, ?, ?, ?, ?)`
+    const params = [id, data.role, data.level, data.isActive ? 1 : 0, now, now]
+    
+    try {
+      console.log('🔍 createUserProfile: Creating user profile in Turso...')
+      console.log('📝 Data:', { role: data.role, level: data.level, isActive: data.isActive })
+      await this.executeQuery(sql, params)
+      
+      // Return the created record
+      return {
+        id,
+        role: data.role,
+        level: data.level,
+        isActive: data.isActive,
+        createdAt: now,
+        updatedAt: now
+      }
+    } catch (error) {
+      console.error('❌ createUserProfile: Error creating user profile in Turso:', error)
+      throw error
+    }
+  }
+
+  async updateManyUserProfiles(where: any, data: any): Promise<{ count: number }> {
+    let sql = 'UPDATE UserProfile SET '
+    const setParts: string[] = []
+    const params: any[] = []
+    
+    // Build SET clause
+    if (data.isActive !== undefined) {
+      setParts.push('ISACTIVE = ?')
+      params.push(data.isActive ? 1 : 0)
+    }
+    if (data.role !== undefined) {
+      setParts.push('ROLE = ?')
+      params.push(data.role)
+    }
+    if (data.level !== undefined) {
+      setParts.push('LEVEL = ?')
+      params.push(data.level)
+    }
+    
+    setParts.push('UPDATEDAT = ?')
+    params.push(new Date().toISOString())
+    
+    sql += setParts.join(', ')
+    
+    // Build WHERE clause
+    if (where && Object.keys(where).length > 0) {
+      const whereParts: string[] = []
+      if (where.isActive !== undefined) {
+        whereParts.push('ISACTIVE = ?')
+        params.push(where.isActive ? 1 : 0)
+      }
+      if (whereParts.length > 0) {
+        sql += ' WHERE ' + whereParts.join(' AND ')
+      }
+    }
+    
+    try {
+      console.log('🔍 updateManyUserProfiles: Updating user profiles in Turso...')
+      console.log('📝 Where:', where)
+      console.log('📝 Data:', data)
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      // For now, return a simple count (Turso doesn't return affected rows count easily)
+      console.log('✅ updateManyUserProfiles: User profiles updated successfully')
+      return { count: 1 } // Simplified for now
+    } catch (error) {
+      console.error('❌ updateManyUserProfiles: Error updating user profiles in Turso:', error)
       throw error
     }
   }
