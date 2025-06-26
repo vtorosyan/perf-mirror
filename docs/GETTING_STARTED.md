@@ -19,17 +19,34 @@ This guide will walk you through setting up PerfMirror and logging your first we
 git clone https://github.com/yourusername/perf-mirror.git
 cd perf-mirror
 
-# Install dependencies
-npm install
-
-# Set up the database
-npm run db:push
+# Complete setup (install + database + seeding)
+make setup
 
 # Start development server
 npm run dev
 
 # Open in browser
 open http://localhost:3000
+```
+
+**What `make setup` does:**
+- Installs dependencies (`npm install`)
+- Sets up the database schema (`prisma db push`)
+- Seeds default data (level expectations, category templates, role weights)
+
+**Alternative manual setup:**
+```bash
+# Install dependencies
+npm install
+
+# Set up the database
+npm run db:push
+
+# Seed default data
+npm run db:seed
+
+# Start development server
+npm run dev
 ```
 
 ### Option 2: Docker Deployment
@@ -44,80 +61,47 @@ make quick-start
 
 ## First-Time Setup
 
-### 1. Initialize Role Weights
+### 1. Activate Role Weights
 
-When you first open the application, you'll need to set up role weights:
+When you first open the application, you'll see pre-seeded role weights:
 
 1. Navigate to the **Role Weights** tab
-2. Click **Initialize Default Roles** if no roles exist
-3. Select your current role (Engineer, Manager, Senior Manager, Director)
-4. Click **Activate** next to your role
+2. You'll see default role weights already created:
+   - **IC General Weights**: Input 30%, Output 40%, Outcome 20%, Impact 10%
+   - **Manager General Weights**: Input 20%, Output 30%, Outcome 30%, Impact 20%
+3. Click **Activate** next to the role that matches your current position
 
-**Default Role Weights**:
-- **Engineer**: Input 30%, Output 40%, Outcome 20%, Impact 10%
-- **Manager**: Input 20%, Output 40%, Outcome 30%, Impact 10%
-- **Senior Manager**: Input 15%, Output 35%, Outcome 35%, Impact 15%
-- **Director**: Input 10%, Output 25%, Outcome 40%, Impact 25%
+### 2. Use Pre-Seeded Category Templates
 
-### 2. Create Work Categories
+Navigate to the **Categories** tab and you'll find starter category templates already available:
 
-Navigate to the **Categories** tab and create categories for your typical work:
+> **💡 Pro Tip**: The local setup includes basic category templates for IC levels 1-2. If you're using the production version at https://perf-mirror-rdbf.vercel.app/, comprehensive category templates are pre-populated for all role/level combinations (IC L1-8, Manager L4-8).
 
-#### Input Categories (Activities you consume)
-```
-Name: Code Reviews
-Dimension: input
-Points per Occurrence: 5
-Description: Reviewing others' code, learning patterns
+#### Pre-Seeded Templates for IC Level 1:
+- **Code Reviews** (input) - 3 pts each, ~5 per week
+- **Bug Fixes** (output) - 5 pts each, ~4 per week  
+- **Documentation Reading** (input) - 2 pts each, ~8 per week
+- **Small Feature Implementation** (output) - 8 pts each, ~2 per week
+- **Team Meetings** (outcome) - 3 pts each, ~6 per week
+- **Learning Activities** (impact) - 4 pts each, ~3 per week
 
-Name: Meeting Participation  
-Dimension: input
-Points per Occurrence: 3
-Description: Standups, planning meetings, discussions
-```
+#### Pre-Seeded Templates for IC Level 2:
+- **Code Reviews** (input) - 4 pts each, ~6 per week
+- **Feature Development** (output) - 10 pts each, ~3 per week
+- **Technical Research** (input) - 5 pts each, ~2 per week
+- **Bug Resolution** (output) - 6 pts each, ~4 per week
+- **Project Completion** (outcome) - 15 pts each, ~1 per week
+- **Team Collaboration** (impact) - 6 pts each, ~4 per week
 
-#### Output Categories (Work you produce)
-```
-Name: Feature Development
-Dimension: output
-Points per Occurrence: 10
-Description: Building new functionality
+**You can:**
+- Use these templates as-is
+- Modify the point values or expected counts
+- Add your own custom categories
+- Create categories for higher levels as needed
 
-Name: Bug Fixes
-Dimension: output
-Points per Occurrence: 3
-Description: Resolving technical issues
-```
+### 3. Set Performance Targets (Optional)
 
-#### Outcome Categories (Results you achieve)
-```
-Name: Design Documents
-Dimension: outcome
-Points per Occurrence: 25
-Description: Technical specifications and architecture
-
-Name: Technical Proposals
-Dimension: outcome
-Points per Occurrence: 20
-Description: RFC documents and solution designs
-```
-
-#### Impact Categories (Influence you create)
-```
-Name: Mentoring Sessions
-Dimension: impact
-Points per Occurrence: 12
-Description: Developing junior engineers
-
-Name: Hiring Interviews
-Dimension: impact
-Points per Occurrence: 15
-Description: Building the team
-```
-
-### 3. Set Performance Targets
-
-Go to the **Targets** tab and create your first performance target:
+Go to the **Targets** tab to create your first performance target if none exist:
 
 ```
 Name: Q1 2024 Performance Target

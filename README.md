@@ -12,12 +12,14 @@ A modern web application for tracking engineering performance using the **IOOI F
 - **🎯 5-Band Performance Evaluation**: Outstanding, Strong Performance, Meeting Expectations, Partially Meeting Expectations, Underperforming
 - **📋 Role-Level Performance Targets**: Configurable targets specific to role and level combinations
 - **📝 Level Expectations Management**: Define and edit expectations for each role and level
+- **🏷️ Comprehensive Category Templates**: Pre-built work categories for all role/level combinations (IC L1-8, Manager L4-8)
 - **📈 Smart Insights**: AI-powered pattern detection with actionable recommendations
 - **🔄 Real-Time Data Refresh**: Seamless data updates when switching between tabs
 - **📱 Modern UI**: Responsive design with interactive charts and real-time calculations
 - **🌐 Hybrid Database**: Seamless switching between SQLite (local) and Turso (production)
 - **🐳 Docker Ready**: Complete containerization with Make commands for easy deployment
 - **🚀 Production Ready**: Deployed on Vercel with automatic builds and health monitoring
+- **🌱 Easy Seeding**: Comprehensive scripts for populating production data
 
 ## 🏗️ Architecture
 

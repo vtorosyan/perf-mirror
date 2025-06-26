@@ -74,6 +74,19 @@ db-update-production: ## Update production database schema (Turso)
 	@echo "🔧 Updating production database schema..."
 	node scripts/ensure-production-schema.js
 
+db-seed: ## Seed local database with default data
+	@echo "🌱 Seeding local database..."
+	npm run db:seed
+
+seed-category-templates: ## Seed comprehensive category templates in production
+	@echo "🌱 Seeding comprehensive category templates..."
+	@if [ -z "$(TURSO_DATABASE_URL)" ] || [ -z "$(TURSO_AUTH_TOKEN)" ]; then \
+		echo "❌ Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables"; \
+		echo "Example: make seed-category-templates TURSO_DATABASE_URL=your-url TURSO_AUTH_TOKEN=your-token"; \
+		exit 1; \
+	fi
+	TURSO_DATABASE_URL="$(TURSO_DATABASE_URL)" TURSO_AUTH_TOKEN="$(TURSO_AUTH_TOKEN)" node scripts/seed-comprehensive-category-templates.js
+
 # =============================================================================
 # Docker Operations
 # =============================================================================
@@ -206,10 +219,12 @@ logs: ## Show development server logs (last 50 lines)
 # Quick Setup Commands
 # =============================================================================
 
-setup: ## Complete setup (install + db + dev)
+setup: ## Complete setup (install + db + seed + ready to dev)
 	@echo "⚡ Running complete setup..."
 	make install
 	make db-push
+	@echo "🌱 Seeding local database with default data..."
+	npm run db:seed
 	@echo "✅ Setup complete! Run 'make dev' to start developing"
 
 quick-start: ## Quick start with Docker

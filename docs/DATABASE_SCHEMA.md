@@ -25,20 +25,20 @@ PerfMirror uses a SQLite database (local development) or Turso cloud database (p
                                               │ updatedAt       │
                                               └─────────────────┘
 
-┌─────────────────┐    ┌─────────────────┐
-│   RoleWeights   │    │ LevelExpectation│
-├─────────────────┤    ├─────────────────┤
-│ id (PK)         │    │ id (PK)         │
-│ name            │    │ role            │
-│ role            │    │ level           │
-│ level           │    │ expectation     │
-│ inputWeight     │    │ createdAt       │
-│ outputWeight    │    │ updatedAt       │
-│ outcomeWeight   │    └─────────────────┘
-│ impactWeight    │
-│ isActive        │
-│ createdAt       │
-│ updatedAt       │
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   RoleWeights   │    │ LevelExpectation│    │ CategoryTemplate│
+├─────────────────┤    ├─────────────────┤    ├─────────────────┤
+│ id (PK)         │    │ id (PK)         │    │ id (PK)         │
+│ name            │    │ role            │    │ role            │
+│ role            │    │ level           │    │ level           │
+│ level           │    │ expectations    │    │ categoryName    │
+│ inputWeight     │    │ createdAt       │    │ dimension       │
+│ outputWeight    │    │ updatedAt       │    │ scorePerOccurrence│
+│ outcomeWeight   │    └─────────────────┘    │ expectedWeeklyCount│
+│ impactWeight    │                           │ description     │
+│ isActive        │                           │ createdAt       │
+│ createdAt       │                           │ updatedAt       │
+│ updatedAt       │                           └─────────────────┘
 └─────────────────┘
 ```
 
@@ -284,6 +284,50 @@ INSERT INTO LevelExpectation VALUES
 ('clh7x6t1u000eu3h495z0b8c', 'IC', 4, 'Contributes to architectural decisions within team and adjacent team scope', '2024-06-12 11:32:00', '2024-06-12 11:32:00'),
 ('clh7x7u2v000fu3h406a1c9d', 'Manager', 1, 'Manages a team of 3-6 engineers effectively', '2024-06-12 11:33:00', '2024-06-12 11:33:00'),
 ('clh7x8v3w000gu3h417b2d0e', 'Manager', 1, 'Conducts regular 1:1s and provides career development guidance', '2024-06-12 11:34:00', '2024-06-12 11:34:00');
+```
+
+### CategoryTemplate
+
+Stores template information for creating new categories.
+
+```sql
+CREATE TABLE CategoryTemplate (
+    id              TEXT PRIMARY KEY,
+    role            TEXT NOT NULL,
+    level           INTEGER NOT NULL,
+    categoryName    TEXT NOT NULL,
+    dimension       TEXT NOT NULL CHECK (dimension IN ('input', 'output', 'outcome', 'impact')),
+    scorePerOccurrence INTEGER NOT NULL,
+    expectedWeeklyCount INTEGER NOT NULL,
+    description     TEXT,
+    createdAt       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+**Fields:**
+- `id`: Unique identifier (CUID)
+- `role`: Role category ("IC", "Manager", "Senior Manager", "Director")
+- `level`: Level within role (1-6 for IC, 1-4 for Manager, etc.)
+- `categoryName`: Name of the category
+- `dimension`: IOOI classification (input, output, outcome, impact)
+- `scorePerOccurrence`: Base points awarded per occurrence
+- `expectedWeeklyCount`: Expected number of occurrences per week
+- `description`: Optional detailed description
+- `createdAt`: Record creation timestamp
+- `updatedAt`: Last modification timestamp
+
+**Business Rules:**
+- `role` and `level` combination should be unique
+- `scorePerOccurrence` must be positive
+- `dimension` enforces IOOI framework compliance
+- `expectedWeeklyCount` must be positive
+
+**Example Data:**
+```sql
+INSERT INTO CategoryTemplate VALUES 
+('clh7x9n3x000hu3h43y9t4v2w', 'IC', 4, 'Code Reviews', 'input', 5, 8, 'Reviewing others code', '2024-06-12 11:10:00', '2024-06-12 11:10:00'),
+('clh7xao4y000iu3h44z0u5w3x', 'Manager', 1, 'Feature Development', 'output', 10, 3, 'Building new functionality', '2024-06-12 11:15:00', '2024-06-12 11:15:00');
 ```
 
 ## Database Configuration

@@ -42,6 +42,9 @@ After schema updates, populate the database with seed data:
 ```bash
 # Seed role-level data and category templates
 node scripts/seed-role-level-data.js
+
+# For comprehensive category template seeding (all role/level combinations)
+TURSO_DATABASE_URL="your-turso-url" TURSO_AUTH_TOKEN="your-token" node scripts/seed-comprehensive-category-templates.js
 ```
 
 ## Post-Deployment Verification
