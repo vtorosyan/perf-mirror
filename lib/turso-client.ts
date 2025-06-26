@@ -1458,15 +1458,12 @@ class TursoHttpClient {
   }
 
   async findFirstUserProfile(filters?: { isActive?: boolean }): Promise<any | null> {
-    let sql = 'SELECT ID as id, ROLE as role, LEVEL as level, ISACTIVE as isActive, CREATEDAT as createdAt, UPDATEDAT as updatedAt FROM UserProfile'
+    // Production schema only has: id, role, level, createdAt, updatedAt
+    let sql = 'SELECT id, role, level, createdAt, updatedAt FROM UserProfile'
     const params: any[] = []
     
-    if (filters && filters.isActive !== undefined) {
-      sql += ' WHERE ISACTIVE = ?'
-      params.push(filters.isActive ? 1 : 0)
-    }
-    
-    sql += ' ORDER BY CREATEDAT DESC LIMIT 1'
+    // Since there's no isActive column in production, ignore the filter
+    sql += ' ORDER BY createdAt DESC LIMIT 1'
     
     try {
       console.log('🔍 findFirstUserProfile: Fetching user profile from Turso...')
@@ -1496,9 +1493,6 @@ class TursoHttpClient {
       if (record.level !== undefined) {
         record.level = parseInt(record.level)
       }
-      if (record.isActive !== undefined) {
-        record.isActive = record.isActive === '1' || record.isActive === 1
-      }
       
       console.log('✅ findFirstUserProfile: User profile found:', record.id)
       return record
@@ -1512,13 +1506,14 @@ class TursoHttpClient {
     const id = this.generateId()
     const now = new Date().toISOString()
     
-    const sql = `INSERT INTO UserProfile (ID, ROLE, LEVEL, ISACTIVE, CREATEDAT, UPDATEDAT) 
-                 VALUES (?, ?, ?, ?, ?, ?)`
-    const params = [id, data.role, data.level, data.isActive ? 1 : 0, now, now]
+    // Production schema only has: id, role, level, createdAt, updatedAt
+    const sql = `INSERT INTO UserProfile (id, role, level, createdAt, updatedAt) 
+                 VALUES (?, ?, ?, ?, ?)`
+    const params = [id, data.role, data.level, now, now]
     
     try {
       console.log('🔍 createUserProfile: Creating user profile in Turso...')
-      console.log('📝 Data:', { role: data.role, level: data.level, isActive: data.isActive })
+      console.log('📝 Data:', { role: data.role, level: data.level })
       await this.executeQuery(sql, params)
       
       // Return the created record
@@ -1526,7 +1521,6 @@ class TursoHttpClient {
         id,
         role: data.role,
         level: data.level,
-        isActive: data.isActive,
         createdAt: now,
         updatedAt: now
       }
@@ -1545,31 +1539,30 @@ class TursoHttpClient {
       let sql = 'UPDATE UserProfile SET '
       const params = []
       
-      // Build SET clause
+      // Build SET clause - production schema only has: id, role, level, createdAt, updatedAt
       const setClauses = []
       if (data.role !== undefined) {
-        setClauses.push('ROLE = ?')
+        setClauses.push('role = ?')
         params.push(data.role)
       }
       if (data.level !== undefined) {
-        setClauses.push('LEVEL = ?')
+        setClauses.push('level = ?')
         params.push(data.level)
-      }
-      if (data.isActive !== undefined) {
-        setClauses.push('ISACTIVE = ?')
-        params.push(data.isActive ? 1 : 0)
       }
       
       // Add updatedAt
-      setClauses.push('UPDATEDAT = ?')
+      setClauses.push('updatedAt = ?')
       params.push(new Date().toISOString())
       
       sql += setClauses.join(', ')
       
-      // Add WHERE clause
-      if (where.isActive !== undefined) {
-        sql += ' WHERE ISACTIVE = ?'
-        params.push(where.isActive ? 1 : 0)
+      // Add WHERE clause - ignore isActive since it doesn't exist in production
+      if (where.role !== undefined) {
+        sql += ' WHERE role = ?'
+        params.push(where.role)
+      } else if (where.level !== undefined) {
+        sql += ' WHERE level = ?'
+        params.push(where.level)
       } else {
         sql += ' WHERE 1=1'  // Update all if no where clause
       }
@@ -1596,21 +1589,18 @@ class TursoHttpClient {
       let sql = 'DELETE FROM UserProfile'
       const params = []
       
-      // Build WHERE clause
+      // Build WHERE clause - production schema only has: id, role, level, createdAt, updatedAt
       if (Object.keys(where).length > 0) {
         const whereClauses = []
-        if (where.isActive !== undefined) {
-          whereClauses.push('ISACTIVE = ?')
-          params.push(where.isActive ? 1 : 0)
-        }
         if (where.role !== undefined) {
-          whereClauses.push('ROLE = ?')
+          whereClauses.push('role = ?')
           params.push(where.role)
         }
         if (where.level !== undefined) {
-          whereClauses.push('LEVEL = ?')
+          whereClauses.push('level = ?')
           params.push(where.level)
         }
+        // Ignore isActive since it doesn't exist in production
         
         if (whereClauses.length > 0) {
           sql += ' WHERE ' + whereClauses.join(' AND ')
