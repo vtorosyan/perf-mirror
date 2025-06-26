@@ -87,6 +87,26 @@ seed-category-templates: ## Seed comprehensive category templates in production
 	fi
 	TURSO_DATABASE_URL="$(TURSO_DATABASE_URL)" TURSO_AUTH_TOKEN="$(TURSO_AUTH_TOKEN)" node scripts/seed-comprehensive-category-templates.js
 
+seed-production: ## Seed production database with ALL data (same as local)
+	@echo "🌱 Seeding production database with comprehensive data..."
+	@if [ -z "$(TURSO_DATABASE_URL)" ] || [ -z "$(TURSO_AUTH_TOKEN)" ]; then \
+		echo "❌ Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables"; \
+		echo "Example: make seed-production TURSO_DATABASE_URL=your-url TURSO_AUTH_TOKEN=your-token"; \
+		exit 1; \
+	fi
+	TURSO_DATABASE_URL="$(TURSO_DATABASE_URL)" TURSO_AUTH_TOKEN="$(TURSO_AUTH_TOKEN)" node scripts/seed-production-comprehensive.js
+
+clear-production: ## Clear ALL data from production database (WARNING: Destructive!)
+	@echo "🗑️  Clearing ALL production data..."
+	@if [ -z "$(TURSO_DATABASE_URL)" ] || [ -z "$(TURSO_AUTH_TOKEN)" ]; then \
+		echo "❌ Please set TURSO_DATABASE_URL and TURSO_AUTH_TOKEN environment variables"; \
+		echo "Example: make clear-production TURSO_DATABASE_URL=your-url TURSO_AUTH_TOKEN=your-token"; \
+		exit 1; \
+	fi
+	@echo "⚠️  WARNING: This will DELETE ALL DATA from production!"
+	@read -p "Type 'DELETE' to confirm: " confirm && [ "$$confirm" = "DELETE" ] || exit 1
+	TURSO_DATABASE_URL="$(TURSO_DATABASE_URL)" TURSO_AUTH_TOKEN="$(TURSO_AUTH_TOKEN)" node scripts/clear-production-data.js
+
 # =============================================================================
 # Docker Operations
 # =============================================================================

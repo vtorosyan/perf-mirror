@@ -271,6 +271,342 @@ const categoryTemplates = [
     description: 'Collaborating effectively with team members'
   },
 
+  // IC L3 Templates - Mid-level Developer
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Technical Research',
+    dimension: 'input',
+    scorePerOccurrence: 4,
+    expectedWeeklyCount: 3,
+    description: 'Researching new technologies and approaches'
+  },
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Architecture Planning',
+    dimension: 'input',
+    scorePerOccurrence: 6,
+    expectedWeeklyCount: 2,
+    description: 'Participating in architecture planning sessions'
+  },
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Complex Feature Development',
+    dimension: 'output',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 1,
+    description: 'Leading development of complex features'
+  },
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Technical Documentation',
+    dimension: 'output',
+    scorePerOccurrence: 5,
+    expectedWeeklyCount: 2,
+    description: 'Writing comprehensive technical documentation'
+  },
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Junior Mentoring',
+    dimension: 'outcome',
+    scorePerOccurrence: 8,
+    expectedWeeklyCount: 2,
+    description: 'Mentoring junior developers'
+  },
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Process Optimization',
+    dimension: 'impact',
+    scorePerOccurrence: 10,
+    expectedWeeklyCount: 1,
+    description: 'Optimizing development processes'
+  },
+
+  // IC L4 Templates - Senior Developer
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Cross-team Collaboration',
+    dimension: 'input',
+    scorePerOccurrence: 5,
+    expectedWeeklyCount: 3,
+    description: 'Collaborating across multiple teams'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Technical Leadership',
+    dimension: 'input',
+    scorePerOccurrence: 8,
+    expectedWeeklyCount: 2,
+    description: 'Providing technical leadership guidance'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Project Leadership',
+    dimension: 'output',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 1,
+    description: 'Leading medium to large projects'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'System Design',
+    dimension: 'output',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 1,
+    description: 'Designing system architecture and components'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Team Mentoring',
+    dimension: 'outcome',
+    scorePerOccurrence: 10,
+    expectedWeeklyCount: 2,
+    description: 'Mentoring multiple team members'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Technical Standards',
+    dimension: 'impact',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 1,
+    description: 'Establishing technical standards and practices'
+  },
+
+  // IC L5 Templates - Senior Developer
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Strategic Planning',
+    dimension: 'input',
+    scorePerOccurrence: 10,
+    expectedWeeklyCount: 2,
+    description: 'Contributing to technical strategy'
+  },
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Industry Research',
+    dimension: 'input',
+    scorePerOccurrence: 8,
+    expectedWeeklyCount: 2,
+    description: 'Researching industry trends and best practices'
+  },
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Cross-team Initiatives',
+    dimension: 'output',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 1,
+    description: 'Leading cross-team technical initiatives'
+  },
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Architecture Design',
+    dimension: 'output',
+    scorePerOccurrence: 18,
+    expectedWeeklyCount: 1,
+    description: 'Designing complex system architectures'
+  },
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Senior Mentoring',
+    dimension: 'outcome',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 1,
+    description: 'Mentoring senior engineers'
+  },
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Technical Innovation',
+    dimension: 'impact',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 1,
+    description: 'Driving technical innovation initiatives'
+  },
+
+  // IC L6 Templates - Staff Engineer
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Organizational Strategy',
+    dimension: 'input',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 2,
+    description: 'Contributing to organizational technical strategy'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'External Collaboration',
+    dimension: 'input',
+    scorePerOccurrence: 10,
+    expectedWeeklyCount: 2,
+    description: 'Collaborating with external partners and vendors'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Organization-wide Initiatives',
+    dimension: 'output',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 1,
+    description: 'Leading organization-wide technical initiatives'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Technical Vision',
+    dimension: 'output',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 1,
+    description: 'Defining technical vision and roadmaps'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Leadership Development',
+    dimension: 'outcome',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 1,
+    description: 'Developing technical leaders'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Engineering Culture',
+    dimension: 'impact',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 1,
+    description: 'Shaping engineering culture and practices'
+  },
+
+  // IC L7 Templates - Principal Engineer
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Industry Leadership',
+    dimension: 'input',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 1,
+    description: 'Leading industry technical discussions'
+  },
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Executive Collaboration',
+    dimension: 'input',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 2,
+    description: 'Collaborating with executive leadership'
+  },
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Technical Innovation',
+    dimension: 'output',
+    scorePerOccurrence: 35,
+    expectedWeeklyCount: 1,
+    description: 'Driving breakthrough technical innovations'
+  },
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Industry Standards',
+    dimension: 'output',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 1,
+    description: 'Contributing to industry standards and practices'
+  },
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Technical Leadership',
+    dimension: 'outcome',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 1,
+    description: 'Providing technical leadership across organization'
+  },
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Strategic Impact',
+    dimension: 'impact',
+    scorePerOccurrence: 40,
+    expectedWeeklyCount: 1,
+    description: 'Creating strategic technical impact'
+  },
+
+  // IC L8 Templates - Distinguished Engineer
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Industry Innovation',
+    dimension: 'input',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 1,
+    description: 'Leading industry-wide technical innovation'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Thought Leadership',
+    dimension: 'input',
+    scorePerOccurrence: 18,
+    expectedWeeklyCount: 1,
+    description: 'Establishing technical thought leadership'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Revolutionary Innovation',
+    dimension: 'output',
+    scorePerOccurrence: 50,
+    expectedWeeklyCount: 1,
+    description: 'Creating revolutionary technical innovations'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Industry Influence',
+    dimension: 'output',
+    scorePerOccurrence: 45,
+    expectedWeeklyCount: 1,
+    description: 'Influencing industry technical direction'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Global Impact',
+    dimension: 'outcome',
+    scorePerOccurrence: 40,
+    expectedWeeklyCount: 1,
+    description: 'Creating global technical impact'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Legacy Building',
+    dimension: 'impact',
+    scorePerOccurrence: 60,
+    expectedWeeklyCount: 1,
+    description: 'Building lasting technical legacy'
+  },
+
   // Manager Level 4 (Team Lead) Templates
   {
     role: 'Manager',
