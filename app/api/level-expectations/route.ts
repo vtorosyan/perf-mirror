@@ -3,17 +3,21 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET(request: NextRequest) {
   try {
+    console.log('🔍 Level expectations API called')
     const { searchParams } = new URL(request.url)
     const role = searchParams.get('role')
     const level = searchParams.get('level')
+    console.log('📝 Query params:', { role, level })
     
     if (role && level) {
+      console.log('🔍 Searching for specific role/level:', role, level)
       const expectation = await prisma.levelExpectation.findFirst({
         where: {
           role,
           level: parseInt(level)
         }
       })
+      console.log('📊 Found expectation:', expectation ? 'YES' : 'NO')
       
       return NextResponse.json(expectation)
     }
