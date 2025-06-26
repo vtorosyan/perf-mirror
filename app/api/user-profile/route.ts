@@ -3,8 +3,9 @@ import { prisma } from '@/lib/prisma'
 
 export async function GET() {
   try {
+    // Since there's no isActive column in production, just get the first (and likely only) profile
     const profile = await prisma.userProfile.findFirst({
-      where: { isActive: true }
+      orderBy: { createdAt: 'desc' }
     })
     
     return NextResponse.json(profile)
@@ -29,18 +30,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Role must be IC or Manager' }, { status: 400 })
     }
     
-    // Deactivate existing profiles
-    await prisma.userProfile.updateMany({
-      where: { isActive: true },
-      data: { isActive: false }
-    })
+    // Delete existing profiles (since there's no isActive column)
+    await prisma.userProfile.deleteMany({})
     
-    // Create new active profile
+    // Create new profile
     const profile = await prisma.userProfile.create({
       data: {
         role,
-        level: parseInt(level),
-        isActive: true
+        level: parseInt(level)
       }
     })
     

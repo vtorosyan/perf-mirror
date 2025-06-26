@@ -481,7 +481,7 @@ const createHybridClient = () => {
     }
     
     hybridClient.userProfile = {
-      findFirst: async (options?: { where?: { isActive?: boolean } }) => {
+      findFirst: async (options?: { where?: { isActive?: boolean }; orderBy?: any }) => {
         console.log('📞 Hybrid client: userProfile.findFirst() called with Turso')
         console.log('📝 FindFirst options:', options)
         try {
@@ -497,11 +497,15 @@ const createHybridClient = () => {
           throw error
         }
       },
-      create: async (options: { data: { role: string; level: number; isActive: boolean } }) => {
+      create: async (options: { data: { role: string; level: number; isActive?: boolean } }) => {
         console.log('📞 Hybrid client: userProfile.create() called with Turso')
         console.log('📝 Create data:', options.data)
         try {
-          const result = await tursoClient.createUserProfile(options.data)
+          const dataWithDefaults = {
+            ...options.data,
+            isActive: options.data.isActive !== undefined ? options.data.isActive : true
+          }
+          const result = await tursoClient.createUserProfile(dataWithDefaults)
           console.log('✅ Hybrid client: userProfile.create() successful:', result.id)
           return result
         } catch (error) {
@@ -518,6 +522,18 @@ const createHybridClient = () => {
           return result
         } catch (error) {
           console.error('❌ Hybrid client: userProfile.updateMany() failed:', error)
+          throw error
+        }
+      },
+      deleteMany: async (options: { where?: any } = {}) => {
+        console.log('📞 Hybrid client: userProfile.deleteMany() called with Turso')
+        console.log('📝 DeleteMany options:', options)
+        try {
+          const result = await tursoClient.deleteManyUserProfiles(options.where || {})
+          console.log('✅ Hybrid client: userProfile.deleteMany() successful:', result.count)
+          return result
+        } catch (error) {
+          console.error('❌ Hybrid client: userProfile.deleteMany() failed:', error)
           throw error
         }
       },

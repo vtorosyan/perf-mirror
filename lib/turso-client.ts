@@ -1537,56 +1537,96 @@ class TursoHttpClient {
   }
 
   async updateManyUserProfiles(where: any, data: any): Promise<{ count: number }> {
-    let sql = 'UPDATE UserProfile SET '
-    const setParts: string[] = []
-    const params: any[] = []
-    
-    // Build SET clause
-    if (data.isActive !== undefined) {
-      setParts.push('ISACTIVE = ?')
-      params.push(data.isActive ? 1 : 0)
-    }
-    if (data.role !== undefined) {
-      setParts.push('ROLE = ?')
-      params.push(data.role)
-    }
-    if (data.level !== undefined) {
-      setParts.push('LEVEL = ?')
-      params.push(data.level)
-    }
-    
-    setParts.push('UPDATEDAT = ?')
-    params.push(new Date().toISOString())
-    
-    sql += setParts.join(', ')
-    
-    // Build WHERE clause
-    if (where && Object.keys(where).length > 0) {
-      const whereParts: string[] = []
-      if (where.isActive !== undefined) {
-        whereParts.push('ISACTIVE = ?')
-        params.push(where.isActive ? 1 : 0)
-      }
-      if (whereParts.length > 0) {
-        sql += ' WHERE ' + whereParts.join(' AND ')
-      }
-    }
+    console.log('🔍 updateManyUserProfiles: Updating user profiles in Turso...')
+    console.log('📝 Where clause:', where)
+    console.log('📝 Update data:', data)
     
     try {
-      console.log('🔍 updateManyUserProfiles: Updating user profiles in Turso...')
-      console.log('📝 Where:', where)
-      console.log('📝 Data:', data)
+      let sql = 'UPDATE UserProfile SET '
+      const params = []
+      
+      // Build SET clause
+      const setClauses = []
+      if (data.role !== undefined) {
+        setClauses.push('ROLE = ?')
+        params.push(data.role)
+      }
+      if (data.level !== undefined) {
+        setClauses.push('LEVEL = ?')
+        params.push(data.level)
+      }
+      if (data.isActive !== undefined) {
+        setClauses.push('ISACTIVE = ?')
+        params.push(data.isActive ? 1 : 0)
+      }
+      
+      // Add updatedAt
+      setClauses.push('UPDATEDAT = ?')
+      params.push(new Date().toISOString())
+      
+      sql += setClauses.join(', ')
+      
+      // Add WHERE clause
+      if (where.isActive !== undefined) {
+        sql += ' WHERE ISACTIVE = ?'
+        params.push(where.isActive ? 1 : 0)
+      } else {
+        sql += ' WHERE 1=1'  // Update all if no where clause
+      }
+      
       const result = await this.executeQuery(sql, params)
       
       if (result.error) {
         throw new Error(result.error)
       }
       
-      // For now, return a simple count (Turso doesn't return affected rows count easily)
       console.log('✅ updateManyUserProfiles: User profiles updated successfully')
-      return { count: 1 } // Simplified for now
+      return { count: 1 }
     } catch (error) {
       console.error('❌ updateManyUserProfiles: Error updating user profiles in Turso:', error)
+      throw error
+    }
+  }
+
+  async deleteManyUserProfiles(where: any = {}): Promise<{ count: number }> {
+    console.log('🗑️ deleteManyUserProfiles: Deleting user profiles in Turso...')
+    console.log('📝 Where clause:', where)
+    
+    try {
+      let sql = 'DELETE FROM UserProfile'
+      const params = []
+      
+      // Build WHERE clause
+      if (Object.keys(where).length > 0) {
+        const whereClauses = []
+        if (where.isActive !== undefined) {
+          whereClauses.push('ISACTIVE = ?')
+          params.push(where.isActive ? 1 : 0)
+        }
+        if (where.role !== undefined) {
+          whereClauses.push('ROLE = ?')
+          params.push(where.role)
+        }
+        if (where.level !== undefined) {
+          whereClauses.push('LEVEL = ?')
+          params.push(where.level)
+        }
+        
+        if (whereClauses.length > 0) {
+          sql += ' WHERE ' + whereClauses.join(' AND ')
+        }
+      }
+      
+      const result = await this.executeQuery(sql, params)
+      
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
+      console.log('✅ deleteManyUserProfiles: User profiles deleted successfully')
+      return { count: 1 }
+    } catch (error) {
+      console.error('❌ deleteManyUserProfiles: Error deleting user profiles in Turso:', error)
       throw error
     }
   }
