@@ -61,9 +61,13 @@ const transformWeeklyLog = (rawLog: any): WeeklyLog | null => {
 interface PerformanceTarget {
   id: string
   name: string
-  excellentThreshold: number
-  goodThreshold: number
-  needsImprovementThreshold: number
+  role?: string
+  level?: string
+  outstandingThreshold: number
+  strongThreshold: number
+  meetingThreshold: number
+  partialThreshold: number
+  underperformingThreshold: number
   timePeriodWeeks: number
   isActive: boolean
 }
@@ -196,18 +200,20 @@ export default function Dashboard() {
   }
 
   const getPerformanceLevel = (score: number, target: PerformanceTarget): string => {
-    if (score >= target.excellentThreshold) return 'Excellent'
-    if (score >= target.goodThreshold) return 'Good'
-    if (score >= target.needsImprovementThreshold) return 'Needs Improvement'
-    return 'Unsatisfactory'
+    if (score >= target.outstandingThreshold) return 'Outstanding'
+    if (score >= target.strongThreshold) return 'Strong Performance'
+    if (score >= target.meetingThreshold) return 'Meeting Expectations'
+    if (score >= target.partialThreshold) return 'Partially Meeting Expectations'
+    return 'Underperforming'
   }
 
   const getPerformanceColor = (level: string): string => {
     switch (level) {
-      case 'Excellent': return 'text-green-600 bg-green-50'
-      case 'Good': return 'text-blue-600 bg-blue-50'
-      case 'Needs Improvement': return 'text-yellow-600 bg-yellow-50'
-      case 'Unsatisfactory': return 'text-red-600 bg-red-50'
+      case 'Outstanding': return 'text-green-700 bg-green-100'
+      case 'Strong Performance': return 'text-green-600 bg-green-50'
+      case 'Meeting Expectations': return 'text-blue-600 bg-blue-50'
+      case 'Partially Meeting Expectations': return 'text-yellow-600 bg-yellow-50'
+      case 'Underperforming': return 'text-red-600 bg-red-50'
       default: return 'text-gray-600 bg-gray-50'
     }
   }
@@ -253,17 +259,20 @@ export default function Dashboard() {
     const currentScore = getEvaluationPeriodScore()
     const level = getPerformanceLevel(currentScore, target)
 
-    if (level === 'Excellent') {
-      return `Great work! You're exceeding expectations with ${currentScore} points over ${description.toLowerCase()}.`
-    } else if (level === 'Good') {
-      const pointsToExcellent = target.excellentThreshold - currentScore
-      return `You're on track for good performance over ${description.toLowerCase()}. ${pointsToExcellent} more points to reach Excellent level.`
-    } else if (level === 'Needs Improvement') {
-      const pointsToGood = target.goodThreshold - currentScore
-      return `You need ${pointsToGood} more points over ${description.toLowerCase()} to reach Good performance level.`
+    if (level === 'Outstanding') {
+      return `Exceptional work! You're performing at an outstanding level with ${currentScore} points over ${description.toLowerCase()}.`
+    } else if (level === 'Strong Performance') {
+      const pointsToOutstanding = target.outstandingThreshold - currentScore
+      return `Great performance! You need ${pointsToOutstanding} more points over ${description.toLowerCase()} to reach Outstanding level.`
+    } else if (level === 'Meeting Expectations') {
+      const pointsToStrong = target.strongThreshold - currentScore
+      return `You're meeting expectations over ${description.toLowerCase()}. ${pointsToStrong} more points to reach Strong Performance level.`
+    } else if (level === 'Partially Meeting Expectations') {
+      const pointsToMeeting = target.meetingThreshold - currentScore
+      return `You need ${pointsToMeeting} more points over ${description.toLowerCase()} to fully meet expectations.`
     } else {
-      const pointsNeeded = target.needsImprovementThreshold - currentScore
-      return `Focus up! You need ${pointsNeeded} more points over ${description.toLowerCase()} to reach minimum expectations.`
+      const pointsNeeded = target.partialThreshold - currentScore
+      return `Focus up! You need ${pointsNeeded} more points over ${description.toLowerCase()} to start meeting expectations.`
     }
   }
 
@@ -357,10 +366,27 @@ export default function Dashboard() {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Target Thresholds</p>
               {activeTarget ? (
-                <div className="text-sm text-gray-900">
-                  <div>Excellent: {activeTarget.excellentThreshold}+</div>
-                  <div>Good: {activeTarget.goodThreshold}+</div>
-                  <div>Min: {activeTarget.needsImprovementThreshold}+</div>
+                <div className="text-xs text-gray-900 space-y-1">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-600 rounded-full mr-2"></div>
+                    <span>Outstanding: {activeTarget.outstandingThreshold}+</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+                    <span>Strong: {activeTarget.strongThreshold}+</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
+                    <span>Meeting: {activeTarget.meetingThreshold}+</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full mr-2"></div>
+                    <span>Partial: {activeTarget.partialThreshold}+</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+                    <span>Under: {activeTarget.underperformingThreshold}+</span>
+                  </div>
                 </div>
               ) : (
                 <p className="text-sm text-gray-900">Not Set</p>
@@ -445,8 +471,9 @@ export default function Dashboard() {
               <Bar dataKey="score" fill="#3b82f6" />
               {activeTarget && (
                 <>
-                  <Bar dataKey={() => activeTarget.excellentThreshold} fill="transparent" stroke="#22c55e" strokeWidth={2} />
-                  <Bar dataKey={() => activeTarget.goodThreshold} fill="transparent" stroke="#3b82f6" strokeWidth={2} />
+                  <Bar dataKey={() => activeTarget.outstandingThreshold} fill="transparent" stroke="#16a34a" strokeWidth={2} />
+                  <Bar dataKey={() => activeTarget.strongThreshold} fill="transparent" stroke="#22c55e" strokeWidth={2} />
+                  <Bar dataKey={() => activeTarget.meetingThreshold} fill="transparent" stroke="#3b82f6" strokeWidth={2} />
                 </>
               )}
             </BarChart>

@@ -39,9 +39,11 @@ model PerformanceTarget {
   name                  String   // "IC Performance Target", "Senior Manager Target", etc.
   role                  String   // "IC" or "Manager"
   level                 Int?     // Level number (optional - null means applies to all levels of that role)
-  excellentThreshold    Int      @default(225)
-  goodThreshold         Int      @default(170)
-  needsImprovementThreshold Int  @default(120)
+  outstandingThreshold  Int      @default(300)  // Outstanding (>150% baseline)
+  strongThreshold       Int      @default(230)  // Strong Performance (115-150% baseline)
+  meetingThreshold      Int      @default(170)  // Meeting Expectations (85-115% baseline)
+  partialThreshold      Int      @default(140)  // Partially Meeting Expectations (70-85% baseline)
+  underperformingThreshold Int   @default(120)  // Underperforming (<70% baseline)
   timePeriodWeeks       Int      @default(12)
   isActive              Boolean  @default(false)
   createdAt             DateTime @default(now())

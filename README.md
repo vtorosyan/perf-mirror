@@ -1,6 +1,6 @@
 # PerfMirror - Performance Tracking for Engineers
 
-A modern web application for tracking engineering performance using the **IOOI Framework** (Input, Output, Outcome, Impact) with role-based weighted scoring. Built with Next.js 14, TypeScript, and intelligent database switching between local SQLite and cloud Turso.
+A modern web application for tracking engineering performance using the **IOOI Framework** (Input, Output, Outcome, Impact) with role-based weighted scoring and comprehensive performance evaluation bands. Built with Next.js 14, TypeScript, and intelligent database switching between local SQLite and cloud Turso.
 
 [![Production](https://img.shields.io/badge/Production-Live-brightgreen)](https://perf-mirror-rdbf.vercel.app/)
 [![Local Development](https://img.shields.io/badge/Development-Ready-blue)](#quick-start)
@@ -9,7 +9,9 @@ A modern web application for tracking engineering performance using the **IOOI F
 
 - **📊 IOOI Framework**: Structured performance tracking across Input, Output, Outcome, and Impact dimensions
 - **⚖️ Role-Based Scoring**: Customizable weights for Engineer, Manager, Senior Manager, Director roles
-- **🎯 Dynamic Evaluation Periods**: Performance targets with configurable time periods (1-52 weeks)
+- **🎯 5-Band Performance Evaluation**: Outstanding, Strong Performance, Meeting Expectations, Partially Meeting Expectations, Underperforming
+- **📋 Role-Level Performance Targets**: Configurable targets specific to role and level combinations
+- **📝 Level Expectations Management**: Define and edit expectations for each role and level
 - **📈 Smart Insights**: AI-powered pattern detection with actionable recommendations
 - **🔄 Real-Time Data Refresh**: Seamless data updates when switching between tabs
 - **📱 Modern UI**: Responsive design with interactive charts and real-time calculations
@@ -138,20 +140,63 @@ docker-compose up --build
 docker-compose -f docker-compose.dev.yml up
 ```
 
-## 🎯 Performance Levels & Dynamic Evaluation
+## 🎯 Performance Evaluation System
 
-### Configurable Performance Targets
+### 5-Band Performance Levels
 
-Performance targets now support **dynamic evaluation periods** from 1-52 weeks:
+PerfMirror uses a comprehensive 5-band performance evaluation system that aligns with modern performance management practices:
 
-| Level | Default Points | Evaluation Period | Description |
-|-------|----------------|-------------------|-------------|
-| **🌟 Excellent** | 225+ | Configurable | Exceeding expectations across all dimensions |
-| **✅ Good** | 170+ | Configurable | Meeting expectations with solid performance |
-| **⚠️ Needs Improvement** | 120+ | Configurable | Below expectations, requires attention |
-| **❌ Unsatisfactory** | <120 | Configurable | Significant performance concerns |
+| Level | Color | Description | Typical Score Range |
+|-------|-------|-------------|-------------------|
+| **🌟 Outstanding** | Green (Dark) | Exceptional performance exceeding all expectations | 300+ |
+| **✅ Strong Performance** | Green | Consistently exceeding expectations with high impact | 230+ |
+| **📊 Meeting Expectations** | Blue | Solid performance meeting all role requirements | 170+ |
+| **⚠️ Partially Meeting Expectations** | Yellow | Some gaps in performance, needs improvement | 140+ |
+| **❌ Underperforming** | Red | Significant performance concerns requiring immediate attention | <140 |
 
-### Example Evaluation Periods
+### Role-Level Performance Targets
+
+Performance targets are now **role and level specific**, allowing for more precise evaluation:
+
+#### Example Target Structure
+```typescript
+{
+  name: "Senior Engineer L4 Target",
+  role: "IC",
+  level: 4,
+  outstandingThreshold: 300,
+  strongThreshold: 230,
+  meetingThreshold: 170,
+  partialThreshold: 140,
+  underperformingThreshold: 120,
+  timePeriodWeeks: 12
+}
+```
+
+#### Role Categories
+- **IC (Individual Contributor)**: Levels 1-6
+- **Manager**: Levels 1-4
+- **Senior Manager**: Levels 1-3
+- **Director**: Levels 1-2
+
+### Level Expectations
+
+Each role and level combination can have specific expectations defined:
+
+- **Behavioral Expectations**: Communication, collaboration, leadership
+- **Technical Expectations**: Skills, knowledge, architectural thinking
+- **Impact Expectations**: Scope of influence, mentoring, strategic contribution
+- **Growth Expectations**: Learning, development, career progression
+
+**Example Level 4 IC Expectations:**
+- "Leads technical design for medium-complexity projects"
+- "Mentors junior engineers and provides technical guidance"
+- "Contributes to architectural decisions within team scope"
+- "Demonstrates strong problem-solving and debugging skills"
+
+### Dynamic Evaluation Periods
+
+Performance targets support **configurable evaluation periods** from 1-52 weeks:
 
 - **Weekly Reviews**: 1 week evaluation period
 - **Sprint Reviews**: 2-3 week evaluation periods  
@@ -177,18 +222,28 @@ The dashboard automatically adjusts to show performance data for your active tar
 ## 📊 Quick Example
 
 ```typescript
-// Weekly performance calculation with dynamic evaluation period
-const evaluationPeriod = activeTarget?.timePeriodWeeks || 1 // 1-52 weeks
-const weeks = getPreviousWeeks(evaluationPeriod)
+// Role-level performance calculation with 5-band evaluation
+const performanceTarget = {
+  name: "Senior Engineer L4 Target",
+  role: "IC",
+  level: 4,
+  outstandingThreshold: 300,
+  strongThreshold: 230,
+  meetingThreshold: 170,
+  partialThreshold: 140,
+  underperformingThreshold: 120,
+  timePeriodWeeks: 12
+}
 
 const weeklyScore = calculateWeightedScore({
   input: 45,      // Code reviews, meetings
   output: 85,     // Features, bug fixes  
   outcome: 60,    // Design docs, proposals
   impact: 30      // Mentoring, hiring
-}, roleWeights.manager); // 20%, 40%, 30%, 10%
+}, roleWeights.seniorIC); // 25%, 45%, 20%, 10%
 
-// Result: 67.5 weighted points over the evaluation period
+// Result: 67.5 weighted points
+// Performance Level: Meeting Expectations (170+ over 12 weeks = ~183 total)
 ```
 
 ## 🔧 Development Commands
@@ -255,6 +310,14 @@ docker-compose down
 - **[Contributing](docs/CONTRIBUTING.md)** - Development practices and contribution guidelines
 
 ## 🆕 Recent Updates
+
+### v3.0.0 - Role-Level Performance System
+- **🎯 5-Band Performance Evaluation**: Comprehensive evaluation system with Outstanding, Strong Performance, Meeting Expectations, Partially Meeting Expectations, and Underperforming levels
+- **📋 Role-Level Performance Targets**: Configurable targets specific to role and level combinations (IC L1-L6, Manager L1-L4, etc.)
+- **📝 Level Expectations Management**: Define, edit, and manage expectations for each role and level combination
+- **🎨 Enhanced Dashboard**: Updated Target Thresholds display with color-coded performance bands
+- **📊 Improved Performance Insights**: More nuanced feedback based on 5-band system
+- **🔧 Database Schema Updates**: New threshold fields and role/level associations
 
 ### v2.1.0 - Dynamic Evaluation Periods
 - **🎯 Configurable Time Periods**: Performance targets now support 1-52 week evaluation periods

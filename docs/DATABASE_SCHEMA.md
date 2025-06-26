@@ -12,23 +12,29 @@ PerfMirror uses a SQLite database (local development) or Turso cloud database (p
 ├─────────────────┤    ├─────────────────┤    ├─────────────────┤
 │ id (PK)         │◄───┤ categoryId (FK) │    │ id (PK)         │
 │ name            │    │ week            │    │ name            │
-│ scorePerOccurrence│  │ count           │    │ excellentThreshold│
-│ dimension       │    │ overrideScore   │    │ goodThreshold   │
-│ description     │    │ createdAt       │    │ needsImprovement│
-│ createdAt       │    └─────────────────┘    │ timePeriodWeeks │
-│ updatedAt       │                           │ isActive        │
-└─────────────────┘                           │ createdAt       │
+│ scorePerOccurrence│  │ count           │    │ role            │
+│ dimension       │    │ overrideScore   │    │ level           │
+│ description     │    │ createdAt       │    │ outstandingThreshold│
+│ createdAt       │    └─────────────────┘    │ strongThreshold │
+│ updatedAt       │                           │ meetingThreshold│
+└─────────────────┘                           │ partialThreshold│
+                                              │ underperformingThreshold│
+                                              │ timePeriodWeeks │
+                                              │ isActive        │
+                                              │ createdAt       │
                                               │ updatedAt       │
                                               └─────────────────┘
 
-┌─────────────────┐
-│   RoleWeights   │
-├─────────────────┤
-│ id (PK)         │
-│ name            │
-│ inputWeight     │
-│ outputWeight    │
-│ outcomeWeight   │
+┌─────────────────┐    ┌─────────────────┐
+│   RoleWeights   │    │ LevelExpectation│
+├─────────────────┤    ├─────────────────┤
+│ id (PK)         │    │ id (PK)         │
+│ name            │    │ role            │
+│ role            │    │ level           │
+│ level           │    │ expectation     │
+│ inputWeight     │    │ createdAt       │
+│ outputWeight    │    │ updatedAt       │
+│ outcomeWeight   │    └─────────────────┘
 │ impactWeight    │
 │ isActive        │
 │ createdAt       │
@@ -122,15 +128,19 @@ INSERT INTO WeeklyLog VALUES
 
 ### PerformanceTarget
 
-Defines performance thresholds and evaluation periods.
+Defines role-level performance thresholds with 5-band evaluation system and evaluation periods.
 
 ```sql
 CREATE TABLE PerformanceTarget (
     id                          TEXT PRIMARY KEY,
     name                        TEXT NOT NULL,
-    excellentThreshold          INTEGER NOT NULL,
-    goodThreshold              INTEGER NOT NULL,
-    needsImprovementThreshold  INTEGER NOT NULL,
+    role                        TEXT,
+    level                       INTEGER,
+    outstandingThreshold        INTEGER NOT NULL DEFAULT 300,
+    strongThreshold            INTEGER NOT NULL DEFAULT 230,
+    meetingThreshold           INTEGER NOT NULL DEFAULT 170,
+    partialThreshold           INTEGER NOT NULL DEFAULT 140,
+    underperformingThreshold   INTEGER NOT NULL DEFAULT 120,
     timePeriodWeeks            INTEGER NOT NULL DEFAULT 12,
     isActive                   BOOLEAN NOT NULL DEFAULT FALSE,
     createdAt                  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -140,34 +150,41 @@ CREATE TABLE PerformanceTarget (
 
 **Fields:**
 - `id`: Unique identifier (CUID)
-- `name`: Target name (e.g., "Q1 2024 Performance Target")
-- `excellentThreshold`: Minimum score for "Excellent" performance
-- `goodThreshold`: Minimum score for "Good" performance
-- `needsImprovementThreshold`: Minimum score for "Needs Improvement"
-- `timePeriodWeeks`: Evaluation period length
+- `name`: Target name (e.g., "Senior Engineer L4 Target")
+- `role`: Role category ("IC", "Manager", "Senior Manager", "Director")
+- `level`: Level within role (1-6 for IC, 1-4 for Manager, etc.)
+- `outstandingThreshold`: Minimum score for "Outstanding" performance
+- `strongThreshold`: Minimum score for "Strong Performance"
+- `meetingThreshold`: Minimum score for "Meeting Expectations"
+- `partialThreshold`: Minimum score for "Partially Meeting Expectations"
+- `underperformingThreshold`: Minimum score for "Underperforming"
+- `timePeriodWeeks`: Evaluation period length (1-52 weeks)
 - `isActive`: Whether this target is currently active
 - `createdAt`: Record creation timestamp
 - `updatedAt`: Last modification timestamp
 
 **Business Rules:**
-- `excellentThreshold > goodThreshold > needsImprovementThreshold`
+- `outstandingThreshold > strongThreshold > meetingThreshold > partialThreshold > underperformingThreshold`
 - Only one target should be active at a time
-- Scores below `needsImprovementThreshold` are "Unsatisfactory"
+- Role and level combination should be unique for active targets
+- Scores below `underperformingThreshold` indicate significant performance concerns
 
-**Performance Level Logic:**
+**5-Band Performance Level Logic:**
 ```typescript
-function getPerformanceLevel(score: number, target: PerformanceTarget) {
-  if (score >= target.excellentThreshold) return 'excellent'
-  if (score >= target.goodThreshold) return 'good'
-  if (score >= target.needsImprovementThreshold) return 'needs-improvement'
-  return 'unsatisfactory'
+function getPerformanceLevel(score: number, target: PerformanceTarget): string {
+  if (score >= target.outstandingThreshold) return 'Outstanding'
+  if (score >= target.strongThreshold) return 'Strong Performance'
+  if (score >= target.meetingThreshold) return 'Meeting Expectations'
+  if (score >= target.partialThreshold) return 'Partially Meeting Expectations'
+  return 'Underperforming'
 }
 ```
 
 **Example Data:**
 ```sql
 INSERT INTO PerformanceTarget VALUES 
-('clh7x8l3r0006u3h41w7r2t0u', 'Q1 2024 Target', 225, 170, 120, 12, TRUE, '2024-06-12 11:00:00', '2024-06-12 11:00:00');
+('clh7x8l3r0006u3h41w7r2t0u', 'Senior Engineer L4 Target', 'IC', 4, 300, 230, 170, 140, 120, 12, TRUE, '2024-06-12 11:00:00', '2024-06-12 11:00:00'),
+('clh7x9m4s0007u3h42x8s3u1v', 'Manager L2 Target', 'Manager', 2, 320, 250, 180, 150, 120, 12, FALSE, '2024-06-12 11:05:00', '2024-06-12 11:05:00');
 ```
 
 ### RoleWeights
@@ -223,10 +240,50 @@ function calculateWeightedScore(scores: IOOIScores, weights: RoleWeights) {
 **Default Role Data:**
 ```sql
 INSERT INTO RoleWeights VALUES 
-('clh7x9m4s0007u3h42x8s3u1v', 'Engineer', 0.30, 0.40, 0.20, 0.10, FALSE, '2024-06-12 11:05:00', '2024-06-12 11:05:00'),
-('clh7x0n5t0008u3h43y9t4v2w', 'Manager', 0.20, 0.40, 0.30, 0.10, TRUE, '2024-06-12 11:10:00', '2024-06-12 11:10:00'),
-('clh7x1o6u0009u3h44z0u5w3x', 'Senior Manager', 0.15, 0.35, 0.35, 0.15, FALSE, '2024-06-12 11:15:00', '2024-06-12 11:15:00'),
-('clh7x2p7v0010u3h45a1v6x4y', 'Director', 0.10, 0.25, 0.40, 0.25, FALSE, '2024-06-12 11:20:00', '2024-06-12 11:20:00');
+('clh7x9m4s0007u3h42x8s3u1v', 'IC General Weights', 'IC', NULL, 0.30, 0.40, 0.20, 0.10, FALSE, '2024-06-12 11:05:00', '2024-06-12 11:05:00'),
+('clh7x0n5t0008u3h43y9t4v2w', 'Manager L2 Weights', 'Manager', 2, 0.20, 0.40, 0.30, 0.10, TRUE, '2024-06-12 11:10:00', '2024-06-12 11:10:00'),
+('clh7x1o6u0009u3h44z0u5w3x', 'Senior Manager Weights', 'Senior Manager', NULL, 0.15, 0.35, 0.35, 0.15, FALSE, '2024-06-12 11:15:00', '2024-06-12 11:15:00'),
+('clh7x2p7v0010u3h45a1v6x4y', 'Director Weights', 'Director', NULL, 0.10, 0.25, 0.40, 0.25, FALSE, '2024-06-12 11:20:00', '2024-06-12 11:20:00');
+```
+
+### LevelExpectation
+
+Stores role and level specific expectations for performance evaluation and career development.
+
+```sql
+CREATE TABLE LevelExpectation (
+    id              TEXT PRIMARY KEY,
+    role            TEXT NOT NULL,
+    level           INTEGER NOT NULL,
+    expectation     TEXT NOT NULL,
+    createdAt       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX LevelExpectation_role_level_idx ON LevelExpectation(role, level);
+```
+
+**Fields:**
+- `id`: Unique identifier (CUID)
+- `role`: Role category ("IC", "Manager", "Senior Manager", "Director")
+- `level`: Level within role (1-6 for IC, 1-4 for Manager, etc.)
+- `expectation`: Specific expectation text for this role and level
+- `createdAt`: Record creation timestamp
+- `updatedAt`: Last modification timestamp
+
+**Business Rules:**
+- Multiple expectations can exist for the same role-level combination
+- Expectations should be specific and actionable
+- Regular review and updates recommended
+
+**Example Data:**
+```sql
+INSERT INTO LevelExpectation VALUES 
+('clh7x4r9s000cu3h473x8z6a', 'IC', 4, 'Leads technical design for medium to large complexity projects', '2024-06-12 11:30:00', '2024-06-12 11:30:00'),
+('clh7x5s0t000du3h484y9a7b', 'IC', 4, 'Mentors junior and mid-level engineers, providing technical guidance', '2024-06-12 11:31:00', '2024-06-12 11:31:00'),
+('clh7x6t1u000eu3h495z0b8c', 'IC', 4, 'Contributes to architectural decisions within team and adjacent team scope', '2024-06-12 11:32:00', '2024-06-12 11:32:00'),
+('clh7x7u2v000fu3h406a1c9d', 'Manager', 1, 'Manages a team of 3-6 engineers effectively', '2024-06-12 11:33:00', '2024-06-12 11:33:00'),
+('clh7x8v3w000gu3h417b2d0e', 'Manager', 1, 'Conducts regular 1:1s and provides career development guidance', '2024-06-12 11:34:00', '2024-06-12 11:34:00');
 ```
 
 ## Database Configuration

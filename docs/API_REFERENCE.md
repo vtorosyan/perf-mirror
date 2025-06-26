@@ -148,7 +148,7 @@ Content-Type: application/json
 
 ## Performance Targets
 
-Manage performance thresholds and goals.
+Manage role-level performance thresholds with 5-band evaluation system.
 
 ### List Targets
 
@@ -161,10 +161,14 @@ GET /api/targets
 [
   {
     "id": "clh7x5i0o0003u3h4xs4o9q7r",
-    "name": "Q1 2024 Performance Target",
-    "excellentThreshold": 225,
-    "goodThreshold": 170,
-    "needsImprovementThreshold": 120,
+    "name": "Senior Engineer L4 Target",
+    "role": "IC",
+    "level": 4,
+    "outstandingThreshold": 300,
+    "strongThreshold": 230,
+    "meetingThreshold": 170,
+    "partialThreshold": 140,
+    "underperformingThreshold": 120,
     "timePeriodWeeks": 12,
     "isActive": true,
     "createdAt": "2024-06-12T10:45:00.000Z",
@@ -180,10 +184,14 @@ POST /api/targets
 Content-Type: application/json
 
 {
-  "name": "Q2 2024 Target",
-  "excellentThreshold": 250,
-  "goodThreshold": 180,
-  "needsImprovementThreshold": 130,
+  "name": "Manager L2 Target",
+  "role": "Manager",
+  "level": 2,
+  "outstandingThreshold": 320,
+  "strongThreshold": 250,
+  "meetingThreshold": 180,
+  "partialThreshold": 150,
+  "underperformingThreshold": 120,
   "timePeriodWeeks": 12,
   "isActive": false
 }
@@ -191,10 +199,14 @@ Content-Type: application/json
 
 **Validation:**
 - `name`: Required, 1-100 characters
-- `excellentThreshold`: Required, positive number
-- `goodThreshold`: Required, positive number, less than excellent
-- `needsImprovementThreshold`: Required, positive number, less than good
-- `timePeriodWeeks`: Required, positive integer
+- `role`: Optional, one of: `IC`, `Manager`, `Senior Manager`, `Director`
+- `level`: Optional, positive integer (1-6 for IC, 1-4 for Manager, etc.)
+- `outstandingThreshold`: Required, positive number
+- `strongThreshold`: Required, positive number, less than outstanding
+- `meetingThreshold`: Required, positive number, less than strong
+- `partialThreshold`: Required, positive number, less than meeting
+- `underperformingThreshold`: Required, positive number, less than partial
+- `timePeriodWeeks`: Required, positive integer (1-52)
 - `isActive`: Boolean, defaults to false
 
 ### Update Target
@@ -214,9 +226,80 @@ Content-Type: application/json
 DELETE /api/targets/{id}
 ```
 
+## Level Expectations
+
+Manage role and level specific expectations for performance evaluation.
+
+### List Level Expectations
+
+```http
+GET /api/level-expectations?role=IC&level=4
+```
+
+**Query Parameters:**
+- `role`: Optional, filter by role ("IC", "Manager", "Senior Manager", "Director")
+- `level`: Optional, filter by level (positive integer)
+
+**Response:**
+```json
+[
+  {
+    "id": "clh7x6j1p0004u3h4yt5p0r8s",
+    "role": "IC",
+    "level": 4,
+    "expectation": "Leads technical design for medium to large complexity projects",
+    "createdAt": "2024-06-12T10:50:00.000Z",
+    "updatedAt": "2024-06-12T10:50:00.000Z"
+  },
+  {
+    "id": "clh7x7k2q0005u3h4zu6q1s9t",
+    "role": "IC",
+    "level": 4,
+    "expectation": "Mentors junior and mid-level engineers, providing technical guidance",
+    "createdAt": "2024-06-12T10:51:00.000Z",
+    "updatedAt": "2024-06-12T10:51:00.000Z"
+  }
+]
+```
+
+### Create Level Expectation
+
+```http
+POST /api/level-expectations
+Content-Type: application/json
+
+{
+  "role": "IC",
+  "level": 4,
+  "expectation": "Contributes to architectural decisions within team and adjacent team scope"
+}
+```
+
+**Validation:**
+- `role`: Required, one of: `IC`, `Manager`, `Senior Manager`, `Director`
+- `level`: Required, positive integer
+- `expectation`: Required, 1-1000 characters
+
+### Update Level Expectation
+
+```http
+PUT /api/level-expectations/{id}
+Content-Type: application/json
+
+{
+  "expectation": "Leads architectural decisions for complex cross-team projects"
+}
+```
+
+### Delete Level Expectation
+
+```http
+DELETE /api/level-expectations/{id}
+```
+
 ## Role Weights
 
-Manage IOOI dimension weights for different roles.
+Manage IOOI dimension weights for different roles and levels.
 
 ### List Role Weights
 
@@ -475,9 +558,13 @@ For reference, the key data models:
 {
   id: string;
   name: string;
-  excellentThreshold: number;
-  goodThreshold: number;
-  needsImprovementThreshold: number;
+  role?: string;
+  level?: number;
+  outstandingThreshold: number;
+  strongThreshold: number;
+  meetingThreshold: number;
+  partialThreshold: number;
+  underperformingThreshold: number;
   timePeriodWeeks: number;
   isActive: boolean;
   createdAt: Date;
@@ -488,11 +575,23 @@ For reference, the key data models:
 {
   id: string;
   name: string;
+  role?: string;
+  level?: number;
   inputWeight: number;
   outputWeight: number;
   outcomeWeight: number;
   impactWeight: number;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// LevelExpectation
+{
+  id: string;
+  role: string;
+  level: number;
+  expectation: string;
   createdAt: Date;
   updatedAt: Date;
 }

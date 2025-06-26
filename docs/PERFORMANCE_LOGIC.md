@@ -4,6 +4,8 @@
 
 PerfMirror uses the **IOOI Framework** (Input, Output, Outcome, Impact) to provide a structured approach to performance tracking that goes beyond simple metrics. This framework helps engineers understand not just what they've done, but the value and influence of their work.
 
+The system now features a comprehensive **5-band performance evaluation system** with **role-level performance targets** and **level expectations management** for precise, contextual performance assessment.
+
 ## The IOOI Framework Explained
 
 ### Input (I) - Activities You Consume
@@ -150,14 +152,176 @@ weeklyScore = (15 × 0.20) + (50 × 0.40) + (40 × 0.30) + (24 × 0.10)
             = 37.4 points
 ```
 
-### Performance Level Mapping
+### Performance Level Mapping - Updated 5-Band System
 
-| Level | Weekly Points | Quarterly Goal |
-|-------|---------------|----------------|
-| **Excellent** | 225+ | 2,700+ |
-| **Good** | 170+ | 2,040+ |
-| **Needs Improvement** | 120+ | 1,440+ |
-| **Unsatisfactory** | <120 | <1,440 |
+PerfMirror now uses a comprehensive 5-band performance evaluation system that provides more nuanced feedback and aligns with modern performance management practices:
+
+| Level | Score Range | Color | Description | Career Impact |
+|-------|-------------|-------|-------------|---------------|
+| **🌟 Outstanding** | 300+ | Green (Dark) | Exceptional performance exceeding all expectations | Promotion ready, top performer |
+| **✅ Strong Performance** | 230+ | Green | Consistently exceeding expectations with high impact | Above expectations, growth trajectory |
+| **📊 Meeting Expectations** | 170+ | Blue | Solid performance meeting all role requirements | Meets role requirements, stable performer |
+| **⚠️ Partially Meeting Expectations** | 140+ | Yellow | Some gaps in performance, needs improvement | Development needed, coaching required |
+| **❌ Underperforming** | <140 | Red | Significant performance concerns requiring immediate attention | Performance improvement plan needed |
+
+### Role-Level Performance Targets
+
+Performance targets are now **role and level specific**, allowing for more precise evaluation based on career progression and role expectations.
+
+#### Target Structure
+```typescript
+interface PerformanceTarget {
+  name: string
+  role: 'IC' | 'Manager' | 'Senior Manager' | 'Director'
+  level: number
+  outstandingThreshold: number      // 300+ typically
+  strongThreshold: number           // 230+ typically
+  meetingThreshold: number          // 170+ typically
+  partialThreshold: number          // 140+ typically
+  underperformingThreshold: number  // 120+ typically
+  timePeriodWeeks: number          // 1-52 weeks
+  isActive: boolean
+}
+```
+
+#### Role Categories and Levels
+
+**Individual Contributor (IC)**
+- **Level 1-2**: Junior/Mid-level engineers
+- **Level 3-4**: Senior engineers
+- **Level 5-6**: Staff/Principal engineers
+
+**Manager**
+- **Level 1-2**: Team leads, first-time managers
+- **Level 3-4**: Experienced managers, senior managers
+
+**Senior Manager**
+- **Level 1-2**: Multi-team managers
+- **Level 3**: Department heads
+
+**Director**
+- **Level 1-2**: Executive leadership
+
+#### Example Targets by Role and Level
+
+**IC Level 3 (Senior Engineer)**
+```typescript
+{
+  name: "Senior Engineer L3 Target",
+  role: "IC",
+  level: 3,
+  outstandingThreshold: 280,
+  strongThreshold: 220,
+  meetingThreshold: 160,
+  partialThreshold: 130,
+  underperformingThreshold: 110,
+  timePeriodWeeks: 12
+}
+```
+
+**Manager Level 2**
+```typescript
+{
+  name: "Manager L2 Target", 
+  role: "Manager",
+  level: 2,
+  outstandingThreshold: 320,
+  strongThreshold: 250,
+  meetingThreshold: 180,
+  partialThreshold: 150,
+  underperformingThreshold: 120,
+  timePeriodWeeks: 12
+}
+```
+
+### Level Expectations Management
+
+Each role and level combination can have specific expectations defined and managed through the application.
+
+#### Types of Expectations
+
+**Behavioral Expectations**
+- Communication and collaboration skills
+- Leadership and influence
+- Adaptability and learning mindset
+- Cultural contribution
+
+**Technical Expectations**
+- Technical skills and knowledge depth
+- Architectural thinking and design
+- Code quality and best practices
+- Problem-solving capabilities
+
+**Impact Expectations**
+- Scope of influence and responsibility
+- Mentoring and knowledge sharing
+- Strategic contribution
+- Cross-functional collaboration
+
+**Growth Expectations**
+- Learning and development goals
+- Career progression indicators
+- Skill acquisition targets
+- Leadership development
+
+#### Example Level Expectations
+
+**IC Level 4 (Senior Engineer) Expectations:**
+- "Leads technical design for medium to large complexity projects"
+- "Mentors junior and mid-level engineers, providing technical guidance"
+- "Contributes to architectural decisions within team and adjacent team scope"
+- "Demonstrates strong problem-solving and debugging skills across the stack"
+- "Participates in hiring decisions and technical interviews"
+- "Drives technical initiatives that improve team productivity"
+
+**Manager Level 1 Expectations:**
+- "Manages a team of 3-6 engineers effectively"
+- "Conducts regular 1:1s and provides career development guidance"
+- "Collaborates with product managers on roadmap planning"
+- "Handles team conflict resolution and performance management"
+- "Contributes to hiring and team building efforts"
+- "Balances individual contribution with management responsibilities"
+
+### Updated Performance Level Logic
+
+```typescript
+function getPerformanceLevel(score: number, target: PerformanceTarget): string {
+  if (score >= target.outstandingThreshold) return 'Outstanding'
+  if (score >= target.strongThreshold) return 'Strong Performance'
+  if (score >= target.meetingThreshold) return 'Meeting Expectations'
+  if (score >= target.partialThreshold) return 'Partially Meeting Expectations'
+  return 'Underperforming'
+}
+```
+
+### Updated Insight Generation
+
+The system now provides more nuanced insights based on the 5-band system:
+
+```typescript
+function generateInsight(score: number, target: PerformanceTarget, level: string): string {
+  switch (level) {
+    case 'Outstanding':
+      return `Exceptional work! You're performing at an outstanding level with ${score} points.`
+    
+    case 'Strong Performance':
+      const pointsToOutstanding = target.outstandingThreshold - score
+      return `Great performance! You need ${pointsToOutstanding} more points to reach Outstanding level.`
+    
+    case 'Meeting Expectations':
+      const pointsToStrong = target.strongThreshold - score
+      return `You're meeting expectations. ${pointsToStrong} more points to reach Strong Performance level.`
+    
+    case 'Partially Meeting Expectations':
+      const pointsToMeeting = target.meetingThreshold - score
+      return `You need ${pointsToMeeting} more points to fully meet expectations.`
+    
+    case 'Underperforming':
+      const pointsNeeded = target.partialThreshold - score
+      return `Focus up! You need ${pointsNeeded} more points to start meeting expectations.`
+  }
+}
+```
 
 ## Smart Insights & Pattern Detection
 
@@ -202,28 +366,78 @@ The system analyzes your IOOI distribution to identify patterns:
 - **Team Calibration**: Discuss patterns with your manager
 - **Historical Context**: Consider how similar work was scored before
 
-## Advanced Scoring Strategies
+## Advanced Scoring Strategies - Updated for 5-Band System
 
-### For Individual Contributors
+### For Individual Contributors (All Levels)
 
-1. **Build Outcome Muscle**: Volunteer for design work even if not required
-2. **Invest in Impact**: Find mentoring opportunities
-3. **Balance Input**: Don't over-optimize meetings and learning
-4. **Quality Over Quantity**: Better to do fewer things well
+**Level 1-2 (Junior/Mid-level)**
+1. **Focus on Output and Input**: Build execution skills and learn from others
+2. **Gradual Outcome Building**: Start taking on small design tasks
+3. **Limited Impact Expected**: Focus on individual growth
+4. **Target Range**: Meeting Expectations (170+) is excellent for early career
 
-### For Managers
+**Level 3-4 (Senior)**
+1. **Balance Output and Outcome**: Strong execution plus strategic thinking
+2. **Increase Impact**: Begin mentoring and technical leadership
+3. **Quality Over Quantity**: Fewer, higher-impact deliverables
+4. **Target Range**: Strong Performance (230+) expected, Outstanding (300+) for promotion
 
-1. **Delegate Output**: Enable others rather than doing yourself
+**Level 5-6 (Staff/Principal)**
+1. **Outcome and Impact Focus**: Strategic technical leadership
+2. **Multiply Team Effectiveness**: Enable others rather than doing yourself
+3. **Organization-wide Influence**: Cross-team technical decisions
+4. **Target Range**: Outstanding (300+) expected, with exceptional impact
+
+### For Managers (All Levels)
+
+**Level 1-2 (New/Experienced Managers)**
+1. **Delegate Output**: Enable team execution rather than doing yourself
 2. **Maximize Outcome**: Focus on decisions that unblock multiple people
-3. **Amplify Impact**: Scale your influence through others
-4. **Strategic Input**: Choose learning that benefits the team
+3. **Build Impact**: Develop team members and improve processes
+4. **Target Range**: Strong Performance (250+) with focus on team development
 
-### For Senior Leaders
+**Level 3-4 (Senior Managers)**
+1. **Strategic Outcomes**: Multi-team coordination and planning
+2. **Organizational Impact**: Culture building and process improvement
+3. **People Development**: Building the next generation of leaders
+4. **Target Range**: Outstanding (320+) with significant organizational impact
 
-1. **Systems Thinking**: Focus on organizational outcomes
-2. **Culture Building**: Invest heavily in impact activities
-3. **Vision Setting**: Strategic outcomes that guide months of work
-4. **People Development**: Build the next generation of leaders
+### Updated Performance Calibration
+
+#### Quarterly Review Process
+1. **Individual Assessment**: Self-evaluation against level expectations
+2. **Manager Review**: Assessment of performance against role-level targets
+3. **Peer Feedback**: 360-degree input on collaboration and impact
+4. **Calibration Session**: Cross-team consistency in evaluation standards
+
+#### Career Progression Indicators
+- **Promotion Readiness**: Consistently Outstanding performance at current level
+- **Lateral Movement**: Strong Performance with different skill emphasis
+- **Development Needed**: Partially Meeting Expectations with coaching plan
+- **Performance Improvement**: Underperforming with structured improvement plan
+
+## Implementation Tips - Updated for New System
+
+### Setting Up Role-Level Targets
+
+1. **Define Role Categories**: Establish clear IC/Manager/Senior Manager/Director tracks
+2. **Set Level Expectations**: Document specific expectations for each role-level combination
+3. **Calibrate Thresholds**: Ensure thresholds are appropriate for each level's scope
+4. **Regular Review**: Update targets and expectations as organization evolves
+
+### Managing Level Expectations
+
+1. **Collaborative Definition**: Work with team leads to define realistic expectations
+2. **Regular Updates**: Review and update expectations quarterly
+3. **Clear Communication**: Ensure all team members understand their level expectations
+4. **Career Pathing**: Use expectations to guide promotion and development discussions
+
+### Using the 5-Band System
+
+1. **Avoid Grade Inflation**: Outstanding should be truly exceptional (top 10-15%)
+2. **Normalize Meeting Expectations**: This should be the majority of performers (60-70%)
+3. **Support Development**: Use Partially Meeting as coaching opportunity, not punishment
+4. **Address Underperformance**: Create clear improvement plans for lowest band
 
 ## Common Misconceptions
 

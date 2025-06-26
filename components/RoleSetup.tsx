@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { User, Target, CheckCircle, AlertCircle, Plus, Settings } from 'lucide-react'
+import { User, Target, CheckCircle, AlertCircle, Plus, Settings, Edit3, Save, X, Trash2 } from 'lucide-react'
 
 interface UserProfile {
   id: string
@@ -42,6 +42,12 @@ export default function RoleSetup({ onDataChange, onRoleSetup }: RoleSetupProps)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showPrefillConfirm, setShowPrefillConfirm] = useState(false)
+  
+  // New state for editing expectations
+  const [editingExpectations, setEditingExpectations] = useState(false)
+  const [editableExpectations, setEditableExpectations] = useState<string[]>([])
+  const [newExpectation, setNewExpectation] = useState('')
+  const [savingExpectations, setSavingExpectations] = useState(false)
 
   useEffect(() => {
     fetchUserProfile()
@@ -192,6 +198,62 @@ export default function RoleSetup({ onDataChange, onRoleSetup }: RoleSetupProps)
     }
   }
 
+  // New functions for editing expectations
+  const handleStartEditingExpectations = () => {
+    setEditingExpectations(true)
+    setEditableExpectations([...levelExpectations])
+    setNewExpectation('')
+  }
+
+  const handleCancelEditingExpectations = () => {
+    setEditingExpectations(false)
+    setEditableExpectations([])
+    setNewExpectation('')
+  }
+
+  const handleAddExpectation = () => {
+    if (newExpectation.trim()) {
+      setEditableExpectations([...editableExpectations, newExpectation.trim()])
+      setNewExpectation('')
+    }
+  }
+
+  const handleRemoveExpectation = (index: number) => {
+    setEditableExpectations(editableExpectations.filter((_, i) => i !== index))
+  }
+
+  const handleSaveExpectations = async () => {
+    if (!selectedRole || !selectedLevel) return
+    
+    setSavingExpectations(true)
+    try {
+      const response = await fetch('/api/level-expectations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          role: selectedRole,
+          level: selectedLevel,
+          expectations: editableExpectations
+        })
+      })
+
+      if (response.ok) {
+        setLevelExpectations([...editableExpectations])
+        setEditingExpectations(false)
+        setEditableExpectations([])
+        alert('Level expectations saved successfully!')
+      } else {
+        const error = await response.json()
+        alert(`Failed to save expectations: ${error.error}`)
+      }
+    } catch (error) {
+      console.error('Error saving level expectations:', error)
+      alert('Failed to save expectations')
+    } finally {
+      setSavingExpectations(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -271,23 +333,106 @@ export default function RoleSetup({ onDataChange, onRoleSetup }: RoleSetupProps)
       </div>
 
       {/* Level Expectations */}
-      {levelExpectations.length > 0 && (
+      {selectedRole && selectedLevel && (
         <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center mb-4">
-            <Target className="h-6 w-6 text-blue-600 mr-2" />
-            <h3 className="text-lg font-semibold text-gray-900">
-              Level Expectations: {selectedRole} L{selectedLevel}
-            </h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center">
+              <Target className="h-6 w-6 text-blue-600 mr-2" />
+              <h3 className="text-lg font-semibold text-gray-900">
+                Level Expectations: {selectedRole} L{selectedLevel}
+              </h3>
+            </div>
+            
+            {!editingExpectations && (
+              <button
+                onClick={handleStartEditingExpectations}
+                className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Edit3 className="h-4 w-4 mr-2" />
+                {levelExpectations.length > 0 ? 'Edit' : 'Add Expectations'}
+              </button>
+            )}
           </div>
           
-          <div className="space-y-3">
-            {levelExpectations.map((expectation, index) => (
-              <div key={index} className="flex items-start space-x-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                <p className="text-gray-700">{expectation}</p>
+          {!editingExpectations ? (
+            // Display mode
+            levelExpectations.length > 0 ? (
+              <div className="space-y-3">
+                {levelExpectations.map((expectation, index) => (
+                  <div key={index} className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
+                    <p className="text-gray-700">{expectation}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">No expectations defined yet</p>
+                <p className="text-sm">Click "Add Expectations" to define level expectations for {selectedRole} L{selectedLevel}</p>
+              </div>
+            )
+          ) : (
+            // Edit mode
+            <div className="space-y-4">
+              <div className="space-y-3">
+                {editableExpectations.map((expectation, index) => (
+                  <div key={index} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                    <p className="text-gray-700 flex-1">{expectation}</p>
+                    <button
+                      onClick={() => handleRemoveExpectation(index)}
+                      className="text-red-500 hover:text-red-700 p-1"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="border-t pt-4">
+                <div className="flex space-x-2">
+                  <input
+                    type="text"
+                    value={newExpectation}
+                    onChange={(e) => setNewExpectation(e.target.value)}
+                    placeholder="Enter a new level expectation..."
+                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleAddExpectation()
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={handleAddExpectation}
+                    disabled={!newExpectation.trim()}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 transition-colors"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 pt-4 border-t">
+                <button
+                  onClick={handleSaveExpectations}
+                  disabled={savingExpectations}
+                  className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition-colors"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  {savingExpectations ? 'Saving...' : 'Save Expectations'}
+                </button>
+                <button
+                  onClick={handleCancelEditingExpectations}
+                  className="flex items-center px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

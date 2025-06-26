@@ -14,9 +14,11 @@ export async function PUT(
       name,
       role,
       level,
-      excellentThreshold,
-      goodThreshold,
-      needsImprovementThreshold,
+      outstandingThreshold,
+      strongThreshold,
+      meetingThreshold,
+      partialThreshold,
+      underperformingThreshold,
       timePeriodWeeks,
       isActive 
     } = body
@@ -38,9 +40,11 @@ export async function PUT(
         ...(name && { name }),
         ...(role && { role }),
         ...(level !== undefined && { level: level ? parseInt(level) : null }),
-        ...(excellentThreshold !== undefined && { excellentThreshold: parseInt(excellentThreshold) }),
-        ...(goodThreshold !== undefined && { goodThreshold: parseInt(goodThreshold) }),
-        ...(needsImprovementThreshold !== undefined && { needsImprovementThreshold: parseInt(needsImprovementThreshold) }),
+        ...(outstandingThreshold !== undefined && { outstandingThreshold: parseInt(outstandingThreshold) }),
+        ...(strongThreshold !== undefined && { strongThreshold: parseInt(strongThreshold) }),
+        ...(meetingThreshold !== undefined && { meetingThreshold: parseInt(meetingThreshold) }),
+        ...(partialThreshold !== undefined && { partialThreshold: parseInt(partialThreshold) }),
+        ...(underperformingThreshold !== undefined && { underperformingThreshold: parseInt(underperformingThreshold) }),
         ...(timePeriodWeeks !== undefined && { timePeriodWeeks: parseInt(timePeriodWeeks) }),
         ...(isActive !== undefined && { isActive })
       }

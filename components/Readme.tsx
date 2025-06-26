@@ -1,6 +1,6 @@
 'use client'
 
-import { BookOpen, ExternalLink, Target, BarChart3, Settings, Scale, Plus, Calendar, RefreshCw, Container } from 'lucide-react'
+import { BookOpen, ExternalLink, Target, BarChart3, Settings, Scale, Plus, Calendar, RefreshCw, Container, Users, Trophy } from 'lucide-react'
 
 export default function Readme() {
   return (
@@ -8,16 +8,26 @@ export default function Readme() {
       <div className="bg-white rounded-lg shadow-sm p-8">
         <div className="flex items-center mb-6">
           <BookOpen className="h-8 w-8 text-blue-600 mr-3" />
-          <h1 className="text-3xl font-bold text-gray-900">Welcome to PerfMirror</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Welcome to PerfMirror v3.0</h1>
         </div>
         
         <div className="prose max-w-none">
           <p className="text-lg text-gray-600 mb-6">
-            PerfMirror is a performance tracking application designed for engineers and managers 
+            PerfMirror is a comprehensive performance tracking application designed for engineers and managers 
             to quantify and track performance using a structured, point-based scoring system 
-            based on the IOOI framework (Input, Output, Outcome, Impact) with configurable 
-            evaluation periods and real-time data synchronization.
+            based on the IOOI framework (Input, Output, Outcome, Impact) with role-level performance targets, 
+            5-band evaluation system, and configurable evaluation periods with real-time data synchronization.
           </p>
+
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">🎉 What's New in v3.0.0</h3>
+            <ul className="space-y-2 text-blue-800">
+              <li><strong>5-Band Performance System:</strong> More nuanced evaluation with Outstanding, Strong Performance, Meeting Expectations, Partially Meeting, and Underperforming</li>
+              <li><strong>Role-Level Performance Targets:</strong> Specific targets for IC (levels 1-6), Manager (levels 1-4), Senior Manager (levels 1-3), and Director (levels 1-2)</li>
+              <li><strong>Level Expectations Management:</strong> Define and edit detailed expectations for each role and level combination</li>
+              <li><strong>Enhanced Career Guidance:</strong> Better alignment between performance evaluation and career progression</li>
+            </ul>
+          </div>
 
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">How It Works</h2>
           
@@ -33,16 +43,16 @@ export default function Readme() {
             </div>
             
             <div className="bg-green-50 p-6 rounded-lg">
-              <h3 className="text-lg font-semibold text-green-900 mb-3">Dynamic Evaluation</h3>
+              <h3 className="text-lg font-semibold text-green-900 mb-3">Role-Level Evaluation</h3>
               <p className="text-green-800 mb-2">
-                Performance is calculated over configurable time periods:
+                Performance targets are now role and level specific:
               </p>
               <ul className="text-sm text-green-700 space-y-1">
-                <li>• Weekly reviews (1 week)</li>
-                <li>• Sprint reviews (2-3 weeks)</li>
-                <li>• Monthly reviews (4 weeks)</li>
-                <li>• Quarterly reviews (12 weeks)</li>
-                <li>• Annual reviews (52 weeks)</li>
+                <li>• IC (Individual Contributor): Levels 1-6</li>
+                <li>• Manager: Levels 1-4</li>
+                <li>• Senior Manager: Levels 1-3</li>
+                <li>• Director: Levels 1-2</li>
+                <li>• Custom expectations per role-level</li>
               </ul>
             </div>
           </div>
@@ -54,7 +64,7 @@ export default function Readme() {
               <BarChart3 className="h-6 w-6 text-blue-600 mt-1" />
               <div>
                 <h4 className="font-semibold text-gray-900">Dynamic Dashboard</h4>
-                <p className="text-gray-600">View performance analytics with configurable evaluation periods. Dashboard automatically adjusts to show data for your active target's time frame.</p>
+                <p className="text-gray-600">View performance analytics with 5-band evaluation system and role-level targets. Dashboard automatically adjusts to show data for your active target's time frame.</p>
               </div>
             </div>
             
@@ -77,8 +87,8 @@ export default function Readme() {
             <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
               <Target className="h-6 w-6 text-red-600 mt-1" />
               <div>
-                <h4 className="font-semibold text-gray-900">Configurable Performance Targets</h4>
-                <p className="text-gray-600">Set performance thresholds with custom evaluation periods (1-52 weeks). Default: Excellent: 225+, Good: 170+, Needs Improvement: 120+.</p>
+                <h4 className="font-semibold text-gray-900">Role-Level Performance Targets</h4>
+                <p className="text-gray-600">Set performance thresholds specific to your role and level with 5-band evaluation system. Targets automatically adjust based on career progression.</p>
               </div>
             </div>
             
@@ -86,7 +96,15 @@ export default function Readme() {
               <Scale className="h-6 w-6 text-orange-600 mt-1" />
               <div>
                 <h4 className="font-semibold text-gray-900">Role-Based Weights</h4>
-                <p className="text-gray-600">Configure dimension weights based on your role (Engineer, Manager, Senior Manager, Director) or create custom weightings.</p>
+                <p className="text-gray-600">Configure dimension weights based on your specific role and level (IC, Manager, Senior Manager, Director) with level-specific weightings.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4 p-4 bg-gray-50 rounded-lg">
+              <Users className="h-6 w-6 text-teal-600 mt-1" />
+              <div>
+                <h4 className="font-semibold text-gray-900">Level Expectations Management</h4>
+                <p className="text-gray-600">Define and edit detailed expectations for each role and level combination through the Role & Level Setup interface.</p>
               </div>
             </div>
 
@@ -107,46 +125,75 @@ export default function Readme() {
             </div>
           </div>
 
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">Performance Evaluation</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">5-Band Performance Evaluation</h2>
           
           <div className="bg-purple-50 p-6 rounded-lg mb-6">
-            <h3 className="text-lg font-semibold text-purple-900 mb-3">Evaluation Period Indicator</h3>
+            <h3 className="text-lg font-semibold text-purple-900 mb-3">Enhanced Evaluation System</h3>
             <p className="text-purple-800 mb-3">
-              The dashboard now shows a clear indicator of your current evaluation period:
+              The new 5-band system provides more nuanced performance assessment with role-level specific targets:
             </p>
             <div className="bg-blue-100 border border-blue-200 rounded p-3 text-blue-800 font-medium">
-              📅 Evaluation Period: Last 12 weeks (Q1 2024 Target)
+              📅 Evaluation Period: Last 12 weeks (IC Level 3 Target)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
             <div className="bg-green-100 p-4 rounded-lg text-center">
-              <div className="text-2xl font-bold text-green-800">225+</div>
-              <div className="text-green-700 font-medium">Excellent</div>
+              <div className="text-xl font-bold text-green-800">280+</div>
+              <div className="text-green-700 font-medium">Outstanding</div>
             </div>
             <div className="bg-blue-100 p-4 rounded-lg text-center">
-              <div className="text-2xl font-bold text-blue-800">170+</div>
-              <div className="text-blue-700 font-medium">Good</div>
+              <div className="text-xl font-bold text-blue-800">240+</div>
+              <div className="text-blue-700 font-medium">Strong Performance</div>
+            </div>
+            <div className="bg-teal-100 p-4 rounded-lg text-center">
+              <div className="text-xl font-bold text-teal-800">200+</div>
+              <div className="text-teal-700 font-medium">Meeting Expectations</div>
             </div>
             <div className="bg-yellow-100 p-4 rounded-lg text-center">
-              <div className="text-2xl font-bold text-yellow-800">120+</div>
-              <div className="text-yellow-700 font-medium">Needs Improvement</div>
+              <div className="text-xl font-bold text-yellow-800">160+</div>
+              <div className="text-yellow-700 font-medium">Partially Meeting</div>
             </div>
             <div className="bg-red-100 p-4 rounded-lg text-center">
-              <div className="text-2xl font-bold text-red-800">&lt;120</div>
-              <div className="text-red-700 font-medium">Unsatisfactory</div>
+              <div className="text-xl font-bold text-red-800">&lt;160</div>
+              <div className="text-red-700 font-medium">Underperforming</div>
+            </div>
+          </div>
+
+          <div className="bg-amber-50 p-6 rounded-lg mb-8">
+            <h3 className="text-lg font-semibold text-amber-900 mb-3">📊 Role-Level Performance Examples</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold text-amber-800 mb-2">IC Level 3 (Mid-level)</h4>
+                <ul className="text-sm text-amber-700 space-y-1">
+                  <li>• Outstanding: 280+ points</li>
+                  <li>• Strong Performance: 240+ points</li>
+                  <li>• Meeting Expectations: 200+ points</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-amber-800 mb-2">Manager Level 2</h4>
+                <ul className="text-sm text-amber-700 space-y-1">
+                  <li>• Outstanding: 320+ points</li>
+                  <li>• Strong Performance: 280+ points</li>
+                  <li>• Meeting Expectations: 240+ points</li>
+                </ul>
+              </div>
             </div>
           </div>
 
           <h2 className="text-2xl font-semibold text-gray-900 mb-4">Enhanced Features</h2>
           
           <ul className="list-disc pl-6 space-y-2 mb-8 text-gray-700">
+            <li><strong>5-Band Performance System:</strong> More nuanced evaluation with Outstanding, Strong Performance, Meeting Expectations, Partially Meeting, and Underperforming levels</li>
+            <li><strong>Role-Level Performance Targets:</strong> Specific targets for different roles (IC, Manager, Senior Manager, Director) and levels within each role</li>
+            <li><strong>Level Expectations Management:</strong> Define and edit detailed expectations for each role-level combination</li>
             <li><strong>Dynamic Evaluation Periods:</strong> Configure targets for 1-52 week periods with automatic dashboard adjustment</li>
             <li><strong>Real-Time Data Sync:</strong> Seamless updates when switching tabs - no more manual refreshes</li>
             <li><strong>Hybrid Database:</strong> Intelligent switching between SQLite (local) and Turso (production)</li>
             <li><strong>Role-based weighted scoring</strong> with customizable weights for different career levels</li>
             <li><strong>Individual score override capability</strong> for exceptional circumstances</li>
-            <li><strong>Smart insights and pattern detection</strong> (e.g., "High input, low outcome pattern detected")</li>
+            <li><strong>Smart insights and pattern detection</strong> with role-level context</li>
             <li><strong>Visual dashboards</strong> with comprehensive analytics and trend analysis</li>
             <li><strong>Docker containerization</strong> with Make commands for simplified development</li>
           </ul>
@@ -196,23 +243,48 @@ export default function Readme() {
           </div>
 
           <div className="bg-yellow-50 p-6 rounded-lg mt-6">
-            <h3 className="text-lg font-semibold text-yellow-900 mb-2">Getting Started</h3>
+            <h3 className="text-lg font-semibold text-yellow-900 mb-2">Getting Started with v3.0</h3>
             <ol className="list-decimal pl-6 space-y-1 text-yellow-800">
               <li>Set up your work categories in the Categories tab</li>
-              <li>Configure your role weights (or use defaults)</li>
-              <li>Set your performance targets with desired evaluation period</li>
+              <li>Configure your role and level in the Role & Level Setup</li>
+              <li>Define or edit expectations for your role-level combination</li>
+              <li>Set your role-level specific performance targets</li>
+              <li>Configure role-based weights (or use defaults)</li>
               <li>Start logging your weekly activities</li>
-              <li>Monitor your progress on the Dashboard with real-time updates</li>
+              <li>Monitor your progress on the Dashboard with 5-band evaluation</li>
             </ol>
           </div>
 
           <div className="bg-green-50 p-6 rounded-lg mt-6">
-            <h3 className="text-lg font-semibold text-green-900 mb-2">Recent Updates</h3>
+            <h3 className="text-lg font-semibold text-green-900 mb-2">🚀 Recent Updates</h3>
             <ul className="list-disc pl-6 space-y-1 text-green-800">
+              <li><strong>v3.0.0:</strong> 5-band performance system, role-level performance targets, level expectations management, enhanced career guidance</li>
               <li><strong>v2.1.0:</strong> Dynamic evaluation periods (1-52 weeks) with automatic dashboard adjustment</li>
               <li><strong>v2.0.0:</strong> Hybrid database support, Docker containerization, and production deployment</li>
               <li><strong>v1.5.0:</strong> Real-time data refresh, enhanced UX, and mobile responsiveness</li>
             </ul>
+          </div>
+
+          <div className="bg-indigo-50 p-6 rounded-lg mt-6">
+            <h3 className="text-lg font-semibold text-indigo-900 mb-2">💡 Benefits of v3.0</h3>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <h4 className="font-semibold text-indigo-800 mb-2">For Individual Contributors</h4>
+                <ul className="text-sm text-indigo-700 space-y-1">
+                  <li>• Clear career progression pathways</li>
+                  <li>• Level-specific performance expectations</li>
+                  <li>• Targeted skill development guidance</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-semibold text-indigo-800 mb-2">For Managers</h4>
+                <ul className="text-sm text-indigo-700 space-y-1">
+                  <li>• Consistent evaluation standards</li>
+                  <li>• Role-specific performance metrics</li>
+                  <li>• Enhanced team development tools</li>
+                </ul>
+              </div>
+            </div>
           </div>
         </div>
       </div>
