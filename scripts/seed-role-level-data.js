@@ -158,7 +158,119 @@ const levelExpectations = [
 
 // Category templates for specific levels
 const categoryTemplates = [
-  // IC L3 Templates
+  // IC L1 Templates - Junior Developer
+  {
+    role: 'IC',
+    level: 1,
+    categoryName: 'Code Reviews',
+    dimension: 'input',
+    scorePerOccurrence: 3,
+    expectedWeeklyCount: 5,
+    description: 'Learning from code review feedback'
+  },
+  {
+    role: 'IC',
+    level: 1,
+    categoryName: 'Bug Fixes',
+    dimension: 'output',
+    scorePerOccurrence: 5,
+    expectedWeeklyCount: 4,
+    description: 'Fixing simple bugs and issues'
+  },
+  {
+    role: 'IC',
+    level: 1,
+    categoryName: 'Documentation Reading',
+    dimension: 'input',
+    scorePerOccurrence: 2,
+    expectedWeeklyCount: 8,
+    description: 'Reading technical documentation and learning materials'
+  },
+  {
+    role: 'IC',
+    level: 1,
+    categoryName: 'Small Feature Implementation',
+    dimension: 'output',
+    scorePerOccurrence: 8,
+    expectedWeeklyCount: 2,
+    description: 'Implementing small, well-defined features'
+  },
+  {
+    role: 'IC',
+    level: 1,
+    categoryName: 'Team Meetings',
+    dimension: 'input',
+    scorePerOccurrence: 2,
+    expectedWeeklyCount: 6,
+    description: 'Participating in team meetings and standups'
+  },
+  {
+    role: 'IC',
+    level: 1,
+    categoryName: 'Task Completion',
+    dimension: 'outcome',
+    scorePerOccurrence: 10,
+    expectedWeeklyCount: 3,
+    description: 'Completing assigned tasks and tickets'
+  },
+
+  // IC L2 Templates - Developer
+  {
+    role: 'IC',
+    level: 2,
+    categoryName: 'Code Reviews',
+    dimension: 'input',
+    scorePerOccurrence: 4,
+    expectedWeeklyCount: 6,
+    description: 'Providing basic feedback on code changes'
+  },
+  {
+    role: 'IC',
+    level: 2,
+    categoryName: 'Feature Development',
+    dimension: 'output',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 2,
+    description: 'Developing medium-complexity features'
+  },
+  {
+    role: 'IC',
+    level: 2,
+    categoryName: 'Bug Fixes',
+    dimension: 'output',
+    scorePerOccurrence: 6,
+    expectedWeeklyCount: 3,
+    description: 'Resolving bugs with moderate complexity'
+  },
+  {
+    role: 'IC',
+    level: 2,
+    categoryName: 'Testing',
+    dimension: 'output',
+    scorePerOccurrence: 4,
+    expectedWeeklyCount: 4,
+    description: 'Writing and maintaining unit tests'
+  },
+  {
+    role: 'IC',
+    level: 2,
+    categoryName: 'Documentation Writing',
+    dimension: 'output',
+    scorePerOccurrence: 8,
+    expectedWeeklyCount: 1,
+    description: 'Writing technical documentation'
+  },
+  {
+    role: 'IC',
+    level: 2,
+    categoryName: 'User Story Completion',
+    dimension: 'outcome',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 2,
+    description: 'Delivering completed user stories'
+  },
+
+  // IC L3 Templates - Senior Developer
   {
     role: 'IC',
     level: 3,
@@ -166,7 +278,7 @@ const categoryTemplates = [
     dimension: 'input',
     scorePerOccurrence: 5,
     expectedWeeklyCount: 8,
-    description: 'Providing feedback on code changes'
+    description: 'Providing detailed feedback on code changes'
   },
   {
     role: 'IC',
@@ -175,7 +287,7 @@ const categoryTemplates = [
     dimension: 'output',
     scorePerOccurrence: 15,
     expectedWeeklyCount: 2,
-    description: 'Completing feature development tasks'
+    description: 'Completing complex feature development tasks'
   },
   {
     role: 'IC',
@@ -184,7 +296,7 @@ const categoryTemplates = [
     dimension: 'output',
     scorePerOccurrence: 8,
     expectedWeeklyCount: 3,
-    description: 'Resolving software defects'
+    description: 'Resolving complex software defects'
   },
   {
     role: 'IC',
@@ -204,8 +316,91 @@ const categoryTemplates = [
     expectedWeeklyCount: 2,
     description: 'Delivering completed user stories'
   },
-  
-  // IC L5 Templates
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Junior Mentoring',
+    dimension: 'input',
+    scorePerOccurrence: 6,
+    expectedWeeklyCount: 2,
+    description: 'Mentoring junior developers'
+  },
+  {
+    role: 'IC',
+    level: 3,
+    categoryName: 'Technical Design',
+    dimension: 'output',
+    scorePerOccurrence: 18,
+    expectedWeeklyCount: 1,
+    description: 'Creating technical designs for features'
+  },
+
+  // IC L4 Templates - Staff Developer
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Code Review Leadership',
+    dimension: 'input',
+    scorePerOccurrence: 6,
+    expectedWeeklyCount: 10,
+    description: 'Leading code review processes'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Architecture Design',
+    dimension: 'output',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 1,
+    description: 'Designing system architecture'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Technical Mentoring',
+    dimension: 'input',
+    scorePerOccurrence: 8,
+    expectedWeeklyCount: 3,
+    description: 'Mentoring developers on technical topics'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Cross-team Collaboration',
+    dimension: 'input',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 2,
+    description: 'Collaborating with other teams'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Project Delivery',
+    dimension: 'outcome',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 0.5,
+    description: 'Delivering complex projects'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Technical Innovation',
+    dimension: 'impact',
+    scorePerOccurrence: 35,
+    expectedWeeklyCount: 0.5,
+    description: 'Driving technical innovation'
+  },
+  {
+    role: 'IC',
+    level: 4,
+    categoryName: 'Process Improvement',
+    dimension: 'outcome',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 0.5,
+    description: 'Improving team processes and practices'
+  },
+
+  // IC L5 Templates - Senior Staff Developer
   {
     role: 'IC',
     level: 5,
@@ -231,7 +426,7 @@ const categoryTemplates = [
     dimension: 'input',
     scorePerOccurrence: 10,
     expectedWeeklyCount: 3,
-    description: 'Mentoring junior engineers'
+    description: 'Mentoring junior and mid-level engineers'
   },
   {
     role: 'IC',
@@ -260,8 +455,82 @@ const categoryTemplates = [
     expectedWeeklyCount: 0.25,
     description: 'Driving technical innovation and improvements'
   },
-  
-  // IC L7 Templates
+  {
+    role: 'IC',
+    level: 5,
+    categoryName: 'Technical Writing',
+    dimension: 'output',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 1,
+    description: 'Writing technical documentation and RFCs'
+  },
+
+  // IC L6 Templates - Principal Engineer
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'System Architecture',
+    dimension: 'output',
+    scorePerOccurrence: 40,
+    expectedWeeklyCount: 1,
+    description: 'Designing large-scale system architecture'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Technical Strategy',
+    dimension: 'impact',
+    scorePerOccurrence: 60,
+    expectedWeeklyCount: 0.5,
+    description: 'Contributing to technical strategy'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Architecture Reviews',
+    dimension: 'input',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 4,
+    description: 'Reviewing and approving architectural decisions'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Senior Mentoring',
+    dimension: 'input',
+    scorePerOccurrence: 12,
+    expectedWeeklyCount: 4,
+    description: 'Mentoring senior engineers'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Cross-org Initiatives',
+    dimension: 'impact',
+    scorePerOccurrence: 75,
+    expectedWeeklyCount: 0.25,
+    description: 'Leading cross-organizational initiatives'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Technical Presentations',
+    dimension: 'output',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 1,
+    description: 'Presenting technical concepts to stakeholders'
+  },
+  {
+    role: 'IC',
+    level: 6,
+    categoryName: 'Industry Engagement',
+    dimension: 'impact',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 0.5,
+    description: 'Engaging with industry communities'
+  },
+
+  // IC L7 Templates - Distinguished Engineer
   {
     role: 'IC',
     level: 7,
@@ -307,8 +576,82 @@ const categoryTemplates = [
     expectedWeeklyCount: 1,
     description: 'Representing the organization externally'
   },
-  
-  // Manager L4 Templates
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Technical Vision',
+    dimension: 'impact',
+    scorePerOccurrence: 80,
+    expectedWeeklyCount: 0.25,
+    description: 'Setting technical vision and standards'
+  },
+  {
+    role: 'IC',
+    level: 7,
+    categoryName: 'Executive Consultation',
+    dimension: 'input',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 2,
+    description: 'Consulting with executives on technical matters'
+  },
+
+  // IC L8 Templates - Fellow/Chief Engineer
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Industry Leadership',
+    dimension: 'impact',
+    scorePerOccurrence: 100,
+    expectedWeeklyCount: 0.5,
+    description: 'Leading industry technical initiatives'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Technical Vision',
+    dimension: 'impact',
+    scorePerOccurrence: 120,
+    expectedWeeklyCount: 0.25,
+    description: 'Setting long-term technical vision'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Research & Innovation',
+    dimension: 'impact',
+    scorePerOccurrence: 80,
+    expectedWeeklyCount: 0.5,
+    description: 'Leading research and innovation initiatives'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Executive Advisory',
+    dimension: 'input',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 2,
+    description: 'Advising executives on technology strategy'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Thought Leadership',
+    dimension: 'impact',
+    scorePerOccurrence: 50,
+    expectedWeeklyCount: 1,
+    description: 'Publishing thought leadership content'
+  },
+  {
+    role: 'IC',
+    level: 8,
+    categoryName: 'Patent Development',
+    dimension: 'outcome',
+    scorePerOccurrence: 100,
+    expectedWeeklyCount: 0.1,
+    description: 'Developing patents and IP'
+  },
+
+  // Manager L4 Templates - Team Lead/Engineering Manager
   {
     role: 'Manager',
     level: 4,
@@ -354,8 +697,91 @@ const categoryTemplates = [
     expectedWeeklyCount: 3,
     description: 'Meeting with stakeholders and partners'
   },
-  
-  // Manager L6 Templates
+  {
+    role: 'Manager',
+    level: 4,
+    categoryName: 'Hiring & Interviews',
+    dimension: 'input',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 2,
+    description: 'Conducting interviews and hiring activities'
+  },
+  {
+    role: 'Manager',
+    level: 4,
+    categoryName: 'Process Improvement',
+    dimension: 'outcome',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 0.5,
+    description: 'Improving team processes and efficiency'
+  },
+
+  // Manager L5 Templates - Senior Engineering Manager
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Team Leadership',
+    dimension: 'input',
+    scorePerOccurrence: 15,
+    expectedWeeklyCount: 8,
+    description: 'Leading multiple teams or larger team'
+  },
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Strategic Planning',
+    dimension: 'output',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 1,
+    description: 'Developing strategic plans for the team'
+  },
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Cross-team Coordination',
+    dimension: 'input',
+    scorePerOccurrence: 18,
+    expectedWeeklyCount: 3,
+    description: 'Coordinating with other teams and departments'
+  },
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Manager Development',
+    dimension: 'input',
+    scorePerOccurrence: 20,
+    expectedWeeklyCount: 2,
+    description: 'Mentoring and developing other managers'
+  },
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Project Delivery',
+    dimension: 'outcome',
+    scorePerOccurrence: 40,
+    expectedWeeklyCount: 1,
+    description: 'Ensuring successful project delivery'
+  },
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Organizational Impact',
+    dimension: 'impact',
+    scorePerOccurrence: 50,
+    expectedWeeklyCount: 0.5,
+    description: 'Driving organizational improvements'
+  },
+  {
+    role: 'Manager',
+    level: 5,
+    categoryName: 'Technical Direction',
+    dimension: 'output',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 1,
+    description: 'Setting technical direction for teams'
+  },
+
+  // Manager L6 Templates - Director of Engineering
   {
     role: 'Manager',
     level: 6,
@@ -401,8 +827,91 @@ const categoryTemplates = [
     expectedWeeklyCount: 1,
     description: 'Reporting to executives and leadership'
   },
-  
-  // Manager L8 Templates
+  {
+    role: 'Manager',
+    level: 6,
+    categoryName: 'Budget Management',
+    dimension: 'outcome',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 1,
+    description: 'Managing budgets and resource allocation'
+  },
+  {
+    role: 'Manager',
+    level: 6,
+    categoryName: 'Talent Strategy',
+    dimension: 'impact',
+    scorePerOccurrence: 40,
+    expectedWeeklyCount: 0.5,
+    description: 'Developing talent acquisition and retention strategies'
+  },
+
+  // Manager L7 Templates - VP of Engineering
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Executive Leadership',
+    dimension: 'impact',
+    scorePerOccurrence: 60,
+    expectedWeeklyCount: 1,
+    description: 'Leading engineering organization'
+  },
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Strategic Vision',
+    dimension: 'impact',
+    scorePerOccurrence: 80,
+    expectedWeeklyCount: 0.5,
+    description: 'Setting strategic vision for engineering'
+  },
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Board Presentations',
+    dimension: 'output',
+    scorePerOccurrence: 40,
+    expectedWeeklyCount: 0.25,
+    description: 'Presenting to board and investors'
+  },
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Organizational Transformation',
+    dimension: 'impact',
+    scorePerOccurrence: 100,
+    expectedWeeklyCount: 0.25,
+    description: 'Leading major organizational changes'
+  },
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Industry Relations',
+    dimension: 'input',
+    scorePerOccurrence: 30,
+    expectedWeeklyCount: 1,
+    description: 'Building industry relationships and partnerships'
+  },
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Executive Team Collaboration',
+    dimension: 'input',
+    scorePerOccurrence: 25,
+    expectedWeeklyCount: 3,
+    description: 'Collaborating with other executives'
+  },
+  {
+    role: 'Manager',
+    level: 7,
+    categoryName: 'Culture Development',
+    dimension: 'impact',
+    scorePerOccurrence: 50,
+    expectedWeeklyCount: 0.5,
+    description: 'Developing engineering culture and values'
+  },
+
+  // Manager L8 Templates - CTO/Chief Engineer
   {
     role: 'Manager',
     level: 8,
@@ -410,7 +919,7 @@ const categoryTemplates = [
     dimension: 'impact',
     scorePerOccurrence: 100,
     expectedWeeklyCount: 0.5,
-    description: 'Setting and communicating company vision'
+    description: 'Setting and communicating company technical vision'
   },
   {
     role: 'Manager',
@@ -447,6 +956,24 @@ const categoryTemplates = [
     scorePerOccurrence: 150,
     expectedWeeklyCount: 0.25,
     description: 'Driving major company-wide transformations'
+  },
+  {
+    role: 'Manager',
+    level: 8,
+    categoryName: 'Technology Strategy',
+    dimension: 'impact',
+    scorePerOccurrence: 120,
+    expectedWeeklyCount: 0.25,
+    description: 'Setting company-wide technology strategy'
+  },
+  {
+    role: 'Manager',
+    level: 8,
+    categoryName: 'Investor Relations',
+    dimension: 'input',
+    scorePerOccurrence: 35,
+    expectedWeeklyCount: 0.5,
+    description: 'Managing investor relations and technical due diligence'
   }
 ]
 
